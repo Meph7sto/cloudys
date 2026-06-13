@@ -1,0 +1,39 @@
+# ================================
+# Inference Service — 开发环境配置
+# ================================
+spring:
+  cloud:
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://localhost:8888/eureka
+
+jwt:
+  secret-key: cloudys-jwt-dev-secret-key-change-in-production
+  expiry-hours: 24
+
+python:
+  bridge:
+    enabled: true
+    manage-process: ${PYTHON_BRIDGE_MANAGE_PROCESS:true}
+    base-url: ${PYTHON_BRIDGE_BASE_URL:http://127.0.0.1:8000}
+    python-executable: ${PYTHON_EXECUTABLE:python}
+    working-directory: ${PYTHON_SIDECAR_WORKDIR:python}
+    app-module: ${PYTHON_SIDECAR_APP_MODULE:sidecar_app:app}
+    host: ${PYTHON_SIDECAR_HOST:127.0.0.1}
+    port: ${PYTHON_SIDECAR_PORT:8000}
+    startup-timeout-ms: 120000
+    warmup-enabled: ${PYTHON_SIDECAR_WARMUP_ENABLED:true}
+    environment:
+      - SKIP_KB_LOAD=${PYTHON_SIDECAR_SKIP_KB_LOAD:true}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 60000
+    max-connections: 20
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      python-backend:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
