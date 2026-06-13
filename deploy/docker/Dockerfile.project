@@ -1,0 +1,10 @@
+# ================================
+# Project Service Dockerfile
+# ================================
+FROM eclipse-temurin:17-jre-alpine
+LABEL service="project-service"
+WORKDIR /app
+COPY services/project-service/target/project-service-*.jar app.jar
+EXPOSE 8002
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8002/actuator/health || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]

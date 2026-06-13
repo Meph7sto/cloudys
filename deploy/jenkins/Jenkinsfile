@@ -1,0 +1,173 @@
+// ================================
+// Jenkins Pipeline — Cloudys 云原生 CI/CD
+// ================================
+// 覆盖阶段: Checkout → Build → Test → BuildImages → PushImages → Deploy → Verify
+// ================================
+
+pipeline {
+    agent any
+
+    environment {
+        // 镜像仓库配置（修改为实际仓库地址）
+        REGISTRY        = 'registry.cn-hangzhou.aliyuncs.com/cloudys'
+        TAG             = "${env.BUILD_NUMBER}"
+        K8S_NAMESPACE   = 'semantic-atlas'
+        KUBECONFIG      = credentials('kubeconfig')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '========== 拉取代码 =========='
+                checkout scm
+                echo "构建版本: ${TAG}"
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo '========== Maven 构建（所有模块） =========='
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo '========== 运行单元测试 =========='
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('BuildImages') {
+            steps {
+                echo '========== 构建各微服务镜像 =========='
+                // 使用 buildkit/nerdctl 构建镜像（K8s containerd 环境）
+                // 如果使用 Docker，替换 nerdctl 为 docker
+                sh '''
+                    SERVICES="eureka-service gateway-service auth-service project-service requirement-service requirement-analysis-service inference-service python-sidecar"
+                    for svc in $SERVICES; do
+                        echo ">>> Building ${svc}..."
+                        case "$svc" in
+                            eureka-service) dockerfile="Dockerfile.eureka" ;;
+                            gateway-service) dockerfile="Dockerfile.gateway" ;;
+                            auth-service) dockerfile="Dockerfile.auth" ;;
+                            project-service) dockerfile="Dockerfile.project" ;;
+                            requirement-service) dockerfile="Dockerfile.requirement" ;;
+                            requirement-analysis-service) dockerfile="Dockerfile.requirement-analysis" ;;
+                            inference-service) dockerfile="Dockerfile.inference" ;;
+                            python-sidecar) dockerfile="Dockerfile.python-sidecar" ;;
+                            *) echo "Unknown service: ${svc}" && exit 1 ;;
+                        esac
+                        if [ "$svc" = "python-sidecar" ]; then
+                            nerdctl build \\
+                                -t ${REGISTRY}/${svc}:${TAG} \\
+                                -t ${REGISTRY}/${svc}:latest \\
+                                -f deploy/docker/${dockerfile} \\
+                                ../Semantic-Atlas/backend_inference
+                        else
+                            nerdctl build \\
+                                -t ${REGISTRY}/${svc}:${TAG} \\
+                                -t ${REGISTRY}/${svc}:latest \\
+                                -f deploy/docker/${dockerfile} \\
+                                .
+                        fi
+                    done
+                '''
+            }
+        }
+
+        stage('PushImages') {
+            steps {
+                echo '========== 推送镜像到远程仓库 =========='
+                sh '''
+                    nerdctl login ${REGISTRY} --username=${REGISTRY_USERNAME} --password=${REGISTRY_PASSWORD}
+                    SERVICES="eureka-service gateway-service auth-service project-service requirement-service requirement-analysis-service inference-service python-sidecar"
+                    for svc in $SERVICES; do
+                        echo ">>> Pushing ${svc}..."
+                        nerdctl push ${REGISTRY}/${svc}:${TAG}
+                        nerdctl push ${REGISTRY}/${svc}:latest
+                    done
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo '========== Kubernetes 部署/更新 =========='
+                sh '''
+                    kubectl apply -f deploy/k8s/00-namespace.yml
+
+                    # 数据库持久化资源和 Secret
+                    kubectl apply -f deploy/k8s/10-jwt-secret.yml
+                    kubectl apply -f deploy/k8s/98-deepseek-secret.yml
+                    kubectl apply -f deploy/k8s/01-postgres-secret.yml
+                    kubectl apply -f deploy/k8s/01-postgres-configmap.yml
+                    kubectl apply -f deploy/k8s/01-postgres-pv-pvc.yml
+                    kubectl apply -f deploy/k8s/01-postgres-statefulset.yml
+
+                    # 等待 PostgreSQL 就绪
+                    kubectl wait --for=condition=ready pod -l app=postgresql -n ${K8S_NAMESPACE} --timeout=120s || true
+
+                    # 注册中心
+                    export REGISTRY=${REGISTRY} TAG=${TAG}
+                    envsubst < deploy/k8s/02-eureka-service.yml | kubectl apply -f -
+
+                    # 等待 Eureka 就绪
+                    kubectl wait --for=condition=ready pod -l app=eureka-service -n ${K8S_NAMESPACE} --timeout=120s || true
+
+                    # 业务服务（不包含 Gateway）
+                    for f in deploy/k8s/04-*.yml deploy/k8s/05-*.yml deploy/k8s/06-*.yml deploy/k8s/07-*.yml deploy/k8s/09-*.yml; do
+                        envsubst < $f | kubectl apply -f -
+                    done
+
+                    # Gateway 最后部署（依赖业务服务注册到 Eureka）
+                    envsubst < deploy/k8s/03-gateway-service.yml | kubectl apply -f -
+
+                    # Ingress
+                    kubectl apply -f deploy/k8s/08-ingress.yml
+
+                    # 滚动更新业务服务
+                    kubectl rollout restart deployment -n ${K8S_NAMESPACE} --selector=app!=postgresql,app!=eureka-service || true
+                '''
+            }
+        }
+
+        stage('Verify') {
+            steps {
+                echo '========== 验证部署结果 =========='
+                sh '''
+                    echo "--- Nodes ---"
+                    kubectl get nodes
+
+                    echo "--- Pods ---"
+                    kubectl get pods -n ${K8S_NAMESPACE}
+
+                    echo "--- Services ---"
+                    kubectl get svc -n ${K8S_NAMESPACE}
+
+                    echo "--- Eureka Dashboard ---"
+                    kubectl port-forward -n ${K8S_NAMESPACE} svc/eureka-service 8888:8888 &
+                    sleep 5
+                    curl -s http://localhost:8888/eureka/apps | head -50
+                    kill %1 || true
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '========== CI/CD 流水线执行成功！ =========='
+            echo "镜像标签: ${TAG}"
+            echo "通过 Gateway 访问: http://<node-ip>:30008"
+        }
+        failure {
+            echo '========== CI/CD 流水线执行失败，请检查日志 =========='
+        }
+    }
+}

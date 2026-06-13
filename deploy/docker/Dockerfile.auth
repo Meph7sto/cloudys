@@ -1,0 +1,10 @@
+# ================================
+# Auth Service Dockerfile
+# ================================
+FROM eclipse-temurin:17-jre-alpine
+LABEL service="auth-service"
+WORKDIR /app
+COPY services/auth-service/target/auth-service-*.jar app.jar
+EXPOSE 8001
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8001/actuator/health || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]

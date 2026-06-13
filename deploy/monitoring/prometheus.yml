@@ -1,0 +1,28 @@
+# ================================
+# Prometheus 抓取配置 — Cloudys 微服务
+# ================================
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'cloudys-microservices'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'host.docker.internal:25704'  # auth-service
+          - 'host.docker.internal:25705'  # project-service
+          - 'host.docker.internal:25706'  # requirement-service
+          - 'host.docker.internal:25707'  # requirement-analysis-service
+          - 'host.docker.internal:25703'  # inference-service
+          - 'host.docker.internal:25698'  # gateway-service
+        labels:
+          namespace: cloudys
+
+  - job_name: 'cloudys-eureka'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'host.docker.internal:25701'
+        labels:
+          service: eureka

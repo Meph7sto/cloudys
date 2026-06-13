@@ -1,0 +1,9 @@
+# ================================
+# Kubernetes Namespace
+# ================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: semantic-atlas
+  labels:
+    name: semantic-atlas

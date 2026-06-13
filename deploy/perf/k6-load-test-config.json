@@ -1,0 +1,30 @@
+{
+  "baseUrl": "http://localhost:25698",
+  "testUser": "admin_test",
+  "testPassword": "AdminTest123!",
+  "testDisplayName": "Load Test Admin",
+  "thresholds": {
+    "http_req_duration_p95": 3000,
+    "error_rate": 0.1,
+    "login_duration_p95": 3000,
+    "api_duration_p95": 2000
+  },
+  "scenarios": {
+    "smoke": {
+      "maxVUs": 5,
+      "duration": "35s"
+    },
+    "load": {
+      "maxVUs": 20,
+      "duration": "2m"
+    },
+    "stress": {
+      "maxVUs": 50,
+      "duration": "5m"
+    }
+  },
+  "output": {
+    "json": "results.json",
+    "html": "results.html"
+  }
+}

@@ -1,0 +1,10 @@
+# ================================
+# Requirement Service Dockerfile
+# ================================
+FROM eclipse-temurin:17-jre-alpine
+LABEL service="requirement-service"
+WORKDIR /app
+COPY services/requirement-service/target/requirement-service-*.jar app.jar
+EXPOSE 8003
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8003/actuator/health || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]
