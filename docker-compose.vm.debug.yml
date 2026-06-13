@@ -1,0 +1,8 @@
+services:
+  adminer:
+    ports:
+      - "${HOST_ADMINER_BIND_ADDRESS:-127.0.0.1}:${HOST_ADMINER_PORT:-25708}:8080"
+
+  eureka:
+    ports:
+      - "${HOST_EUREKA_BIND_ADDRESS:-127.0.0.1}:${HOST_EUREKA_PORT:-25701}:8888"

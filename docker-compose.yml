@@ -3,8 +3,6 @@ services:
     image: postgres:16-alpine
     container_name: cloudys-postgres
     restart: unless-stopped
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-cloudys}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudys_dev}
@@ -22,8 +20,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-eureka
     restart: unless-stopped
-    ports:
-      - "8888:8888"
     volumes:
       - ./services/eureka-service/target/eureka-service-1.0.0-SNAPSHOT.jar:/app/eureka-service.jar
     working_dir: /app
@@ -44,8 +40,6 @@ services:
       dockerfile: ../../cloudys/deploy/docker/Dockerfile.python-sidecar
     container_name: cloudys-python-sidecar
     restart: unless-stopped
-    ports:
-      - "8000:8000"
     environment:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
       - DEEPSEEK_API_URL=${DEEPSEEK_API_URL:-https://api.deepseek.com}
@@ -62,8 +56,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-inference
     restart: unless-stopped
-    ports:
-      - "8006:8006"
     depends_on:
       eureka:
         condition: service_healthy
@@ -84,8 +76,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-auth
     restart: unless-stopped
-    ports:
-      - "8001:8001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,8 +104,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-project
     restart: unless-stopped
-    ports:
-      - "8002:8002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -144,8 +132,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-requirement
     restart: unless-stopped
-    ports:
-      - "8003:8003"
     depends_on:
       postgres:
         condition: service_healthy
@@ -176,8 +162,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-analysis
     restart: unless-stopped
-    ports:
-      - "8004:8004"
     depends_on:
       postgres:
         condition: service_healthy
@@ -206,8 +190,6 @@ services:
     image: eclipse-temurin:17-jre-alpine
     container_name: cloudys-gateway
     restart: unless-stopped
-    ports:
-      - "8008:8008"
     depends_on:
       eureka:
         condition: service_healthy
@@ -233,8 +215,6 @@ services:
     image: adminer
     container_name: cloudys-adminer
     restart: always
-    ports:
-      - 8080:8080
     environment:
       ADMINER_DESIGN: "pappu687"
 

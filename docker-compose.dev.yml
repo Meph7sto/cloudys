@@ -1,0 +1,40 @@
+services:
+  postgres:
+    ports:
+      - "${HOST_POSTGRES_PORT:-25700}:5432"
+
+  eureka:
+    ports:
+      - "${HOST_EUREKA_PORT:-25701}:8888"
+
+  python-sidecar:
+    ports:
+      - "${HOST_PYTHON_SIDECAR_PORT:-25702}:8000"
+
+  inference-service:
+    ports:
+      - "${HOST_INFERENCE_PORT:-25703}:8006"
+
+  auth-service:
+    ports:
+      - "${HOST_AUTH_PORT:-25704}:8001"
+
+  project-service:
+    ports:
+      - "${HOST_PROJECT_PORT:-25705}:8002"
+
+  requirement-service:
+    ports:
+      - "${HOST_REQUIREMENT_PORT:-25706}:8003"
+
+  requirement-analysis-service:
+    ports:
+      - "${HOST_ANALYSIS_PORT:-25707}:8004"
+
+  gateway-service:
+    ports:
+      - "${HOST_GATEWAY_PORT:-25698}:8008"
+
+  adminer:
+    ports:
+      - "${HOST_ADMINER_PORT:-25708}:8080"

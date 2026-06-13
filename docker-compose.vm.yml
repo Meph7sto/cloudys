@@ -1,0 +1,8 @@
+services:
+  gateway-service:
+    ports:
+      - "${HOST_GATEWAY_BIND_ADDRESS:-0.0.0.0}:${HOST_GATEWAY_PORT:-25698}:8008"
+
+  postgres:
+    ports:
+      - "${HOST_POSTGRES_BIND_ADDRESS:-127.0.0.1}:${HOST_POSTGRES_PORT:-25700}:5432"
