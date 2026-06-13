@@ -1,0 +1,36 @@
+{
+  "name": "semantic-atlas-frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "lint": "eslint \"src/**/*.{js,vue}\"",
+    "lint:fix": "eslint \"src/**/*.{js,vue}\" --fix",
+    "format": "prettier --write \"src/**/*.{js,vue,css,json,md}\" \"*.{js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,vue,css,json,md}\" \"*.{js,json}\"",
+    "check": "npm run lint && npm run build",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "echarts": "^5.4.3",
+    "lucide-vue-next": "^0.279.0",
+    "pinia": "^2.1.6",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "autoprefixer": "^10.4.15",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.9.0",
+    "globals": "^17.5.0",
+    "postcss": "^8.4.29",
+    "prettier": "^3.8.3",
+    "tailwindcss": "^3.3.3",
+    "vite": "^7.3.1"
+  }
+}
