@@ -1,0 +1,111 @@
+# ================================
+# Inference Service — Deployment + Service（推理服务，含 Python Sidecar）
+# ================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-service
+  namespace: semantic-atlas
+  labels:
+    app: inference-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8006
+      targetPort: 8006
+      protocol: TCP
+      name: http
+  selector:
+    app: inference-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-service
+  namespace: semantic-atlas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inference-service
+  template:
+    metadata:
+      labels:
+        app: inference-service
+    spec:
+      containers:
+        # Java 推理服务
+        - name: inference-service
+          image: ${REGISTRY}/inference-service:${TAG}
+          ports:
+            - containerPort: 8006
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
+            - name: PYTHON_BRIDGE_BASE_URL
+              value: http://localhost:8000
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8006
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8006
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+
+        # Python 推理 Sidecar
+        - name: python-sidecar
+          image: ${REGISTRY}/python-sidecar:${TAG}
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: deepseek-secret
+                  key: DEEPSEEK_API_KEY
+                  optional: true
+            - name: DEEPSEEK_API_URL
+              value: "https://api.deepseek.com"
+            - name: DEEPSEEK_MODEL
+              value: "deepseek-v4-pro"
+            - name: SKIP_KB_LOAD
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
