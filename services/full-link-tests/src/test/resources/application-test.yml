@@ -1,0 +1,33 @@
+# ================================
+# Full-Link Integration Tests — Test Profile
+# ================================
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+  flyway:
+    enabled: false
+  cloud:
+    discovery:
+      enabled: false
+    eureka:
+      client:
+        enabled: false
+    openfeign:
+      circuitbreaker:
+        enabled: false
+
+jwt:
+  secret-key: full-link-test-secret-minimum-32-characters
+  expiry-hours: 24
+
+logging:
+  level:
+    com.cloudys: DEBUG
+    org.springframework.web: INFO

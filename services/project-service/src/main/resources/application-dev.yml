@@ -1,0 +1,21 @@
+# ================================
+# Project Service — 开发环境配置
+# ================================
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cloudys
+    username: cloudys
+    password: cloudys_dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+  cloud:
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://localhost:8888/eureka
+
+jwt:
+  secret-key: cloudys-jwt-dev-secret-key-change-in-production
+  expiry-hours: 24

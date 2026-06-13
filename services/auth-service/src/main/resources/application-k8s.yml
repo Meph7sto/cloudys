@@ -1,0 +1,33 @@
+# ================================
+# Auth Service — Kubernetes 环境配置
+# ================================
+# 激活方式：在 application.yml 中设置 spring.profiles.active: k8s
+# 注意：K8s 环境禁止写死 localhost，服务间访问使用 Kubernetes Service 域名
+spring:
+  datasource:
+    url: jdbc:postgresql://postgresql.semantic-atlas.svc.cluster.local:5432/cloudys
+    username: ${POSTGRES_USER:cloudys}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+  cloud:
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-service.semantic-atlas.svc.cluster.local:8888/eureka
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  expiry-hours: 24
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

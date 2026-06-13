@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:requirement_analysis_test;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  cloud:
+    discovery:
+      enabled: false
+    service-registry:
+      auto-registration:
+        enabled: false
+    eureka:
+      client:
+        enabled: false
+
+jwt:
+  secret-key: test-secret-key-for-unit-tests-min-32
+  expiry-hours: 24

@@ -1,0 +1,66 @@
+server:
+  port: 8006
+
+spring:
+  application:
+    name: inference-service
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+    eureka:
+      client:
+        service-url:
+          defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}
+  expiry-hours: ${JWT_EXPIRY_HOURS:24}
+
+# Python sidecar HTTP Bridge 配置 (Phase 3)
+python:
+  bridge:
+    enabled: true
+    manage-process: ${PYTHON_BRIDGE_MANAGE_PROCESS:false}
+    base-url: ${PYTHON_BRIDGE_BASE_URL:http://localhost:8000}
+    python-executable: ${PYTHON_EXECUTABLE:python}
+    working-directory: ${PYTHON_SIDECAR_WORKDIR:python}
+    app-module: ${PYTHON_SIDECAR_APP_MODULE:sidecar_app:app}
+    host: ${PYTHON_SIDECAR_HOST:127.0.0.1}
+    port: ${PYTHON_SIDECAR_PORT:8000}
+    startup-timeout-ms: ${PYTHON_SIDECAR_STARTUP_TIMEOUT_MS:90000}
+    warmup-enabled: ${PYTHON_SIDECAR_WARMUP_ENABLED:true}
+    warmup-prompt: ${PYTHON_SIDECAR_WARMUP_PROMPT:ping}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 60000
+    max-in-memory-size: 16MB
+    max-connections: 50
+    max-idle-timeout-ms: 30000
+
+# Resilience4j 熔断配置
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      python-backend:
+        base-config: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 60s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always

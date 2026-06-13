@@ -1,0 +1,28 @@
+# ================================
+# API Compatibility Tests — Test Profile
+# ================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  flyway:
+    enabled: false
+  cloud:
+    discovery:
+      enabled: false
+    eureka:
+      client:
+        enabled: false
+
+jwt:
+  secret-key: api-compat-test-secret-minimum-32-chars
+  expiry-hours: 24

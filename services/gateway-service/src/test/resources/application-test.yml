@@ -1,0 +1,110 @@
+# ================================
+# Gateway Service — Test Profile
+# ================================
+spring:
+  cloud:
+    discovery:
+      enabled: false
+    eureka:
+      client:
+        enabled: false
+    gateway:
+      routes:
+        - id: test-auth
+          uri: http://localhost:18001
+          predicates:
+            - Path=/api/v2/auth/**
+        - id: test-permission
+          uri: http://localhost:18001
+          predicates:
+            - Path=/api/v2/permission/**
+        - id: test-manage
+          uri: http://localhost:18002
+          predicates:
+            - Path=/api/v2/manage/**
+        - id: test-product
+          uri: http://localhost:18002
+          predicates:
+            - Path=/api/v2/product/**
+        - id: test-requirements
+          uri: http://localhost:18003
+          predicates:
+            - Path=/api/v2/requirements/**
+        - id: test-requirements-compat
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/requirements/extract_l123,/api/v2/requirements/extract_l123/stream,/api/v2/requirements/session/**,/api/v2/requirements/stats,/api/v2/requirements/l4/**
+        - id: test-classification
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/classification/**
+        - id: test-dedup
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/dedup/**
+        - id: test-actor
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/actor/**
+        - id: test-analysis
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/analysis/**
+        - id: test-graph
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/requirement-graph/**
+        - id: test-change
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/requirement-change/**
+        - id: test-inference-chat
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/chat/**
+        - id: test-inference-classification
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/classification/**
+        - id: test-inference-conflict
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/conflict/**
+        - id: test-inference-traceability
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/traceability/**
+        - id: test-inference-kb
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/kb/**
+        - id: test-inference-l4
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/l4/**
+        - id: test-inference-acquisition
+          uri: http://localhost:18006
+          predicates:
+            - Path=/api/v2/inference/acquisition/**
+        - id: test-inference-compat
+          uri: http://localhost:18006
+          predicates:
+            - Path=/inference/**
+        - id: test-default
+          uri: http://localhost:18004
+          predicates:
+            - Path=/api/v2/**
+          order: 100
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+jwt:
+  secret-key: test-gateway-jwt-secret-minimum-32-chars
+  expiry-hours: 1

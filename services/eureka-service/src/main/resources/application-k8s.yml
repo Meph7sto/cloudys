@@ -1,0 +1,25 @@
+# ================================
+# Eureka Server — Kubernetes 环境配置
+# ================================
+eureka:
+  instance:
+    hostname: ${EUREKA_HOST:eureka-service.semantic-atlas.svc.cluster.local}
+    prefer-ip-address: false
+  server:
+    # 生产环境开启自我保护
+    enable-self-preservation: true
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:8888/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -1,0 +1,13 @@
+# ================================
+# Eureka Server — 开发环境配置
+# ================================
+eureka:
+  instance:
+    hostname: localhost
+  server:
+    # 开发环境关闭自我保护，方便服务快速上下线测试（课程验收要求）
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+  client:
+    register-with-eureka: false
+    fetch-registry: false

@@ -1,0 +1,133 @@
+server:
+  port: 8008
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    eureka:
+      client:
+        service-url:
+          defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${CORS_ORIGINS:*}"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # ======================== Auth Service ========================
+        - id: auth-service-auth
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v2/auth/**
+        - id: auth-service-permission
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v2/permission/**
+
+        # ======================== Project Service ========================
+        - id: project-service-manage
+          uri: lb://project-service
+          predicates:
+            - Path=/api/v2/manage/**
+        - id: project-service-product
+          uri: lb://project-service
+          predicates:
+            - Path=/api/v2/product/**
+
+        # ======================== Requirement Service ========================
+        - id: requirement-analysis-service-requirements-compat
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/requirements/extract_l123,/api/v2/requirements/extract_l123/stream,/api/v2/requirements/session/**,/api/v2/requirements/stats,/api/v2/requirements/l4/**
+        - id: requirement-service-requirements
+          uri: lb://requirement-service
+          predicates:
+            - Path=/api/v2/requirements/**
+
+        # ======================== Requirement Analysis Service ========================
+        - id: requirement-analysis-service-classification
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/classification/**
+        - id: requirement-analysis-service-dedup
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/dedup/**
+        - id: requirement-analysis-service-actor
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/actor/**
+        - id: requirement-analysis-service-analysis
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/analysis/**
+        - id: requirement-analysis-service-requirement-graph
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/requirement-graph/**
+        - id: requirement-analysis-service-requirement-change
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/requirement-change/**
+
+        # ======================== Inference Service ========================
+        - id: inference-service-chat
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/chat/**
+        - id: inference-service-classification
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/classification/**
+        - id: inference-service-conflict
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/conflict/**
+        - id: inference-service-traceability
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/traceability/**
+        - id: inference-service-kb
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/kb/**
+        - id: inference-service-l4
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/l4/**
+        - id: inference-service-acquisition
+          uri: lb://inference-service
+          predicates:
+            - Path=/api/v2/inference/acquisition/**
+        - id: inference-service-compat
+          uri: lb://inference-service
+          predicates:
+            - Path=/inference/**
+
+        # ======================== Default (v1 compat, general) ========================
+        - id: requirement-analysis-service-default
+          uri: lb://requirement-analysis-service
+          predicates:
+            - Path=/api/v2/**
+          order: 100
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}
+  expiry-hours: ${JWT_EXPIRY_HOURS:24}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always

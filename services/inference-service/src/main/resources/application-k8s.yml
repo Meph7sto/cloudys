@@ -1,0 +1,46 @@
+# ================================
+# Inference Service — Kubernetes 环境配置
+# ================================
+spring:
+  cloud:
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-service.semantic-atlas.svc.cluster.local:8888/eureka
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  expiry-hours: 24
+
+python:
+  bridge:
+    enabled: true
+    manage-process: false
+    base-url: ${PYTHON_BRIDGE_BASE_URL:http://localhost:8000}
+    host: 127.0.0.1
+    port: 8000
+    startup-timeout-ms: 120000
+    warmup-enabled: ${PYTHON_SIDECAR_WARMUP_ENABLED:true}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 90000
+    max-connections: 50
+    max-idle-timeout-ms: 60000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      python-backend:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

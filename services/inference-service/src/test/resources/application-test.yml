@@ -1,0 +1,34 @@
+spring:
+  cloud:
+    discovery:
+      enabled: false
+    service-registry:
+      auto-registration:
+        enabled: false
+    eureka:
+      client:
+        enabled: false
+
+jwt:
+  secret-key: test-secret-key-for-unit-tests-min-32
+  expiry-hours: 24
+
+python:
+  bridge:
+    enabled: true
+    manage-process: false
+    base-url: http://localhost:${mock.server.port:18000}
+    startup-timeout-ms: 5000
+    warmup-enabled: false
+    connect-timeout-ms: 2000
+    read-timeout-ms: 10000
+    max-connections: 5
+    max-idle-timeout-ms: 10000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      python-backend:
+        sliding-window-size: 3
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
