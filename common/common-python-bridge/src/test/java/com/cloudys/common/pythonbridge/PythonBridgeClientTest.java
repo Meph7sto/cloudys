@@ -25,7 +25,8 @@ class PythonBridgeClientTest {
         assertThat(props.getBaseUrl()).isEqualTo("http://localhost:8000");
         assertThat(props.isEnabled()).isTrue();
         assertThat(props.isManageProcess()).isFalse();
-        assertThat(props.getPythonExecutable()).isEqualTo("python");
+        assertThat(props.getPythonExecutable()).isEqualTo("uv");
+        assertThat(props.getWorkingDirectory()).isEqualTo("services/python-sidecar");
         assertThat(props.getAppModule()).isEqualTo("sidecar_app:app");
         assertThat(props.getHost()).isEqualTo("127.0.0.1");
         assertThat(props.getPort()).isEqualTo(8000);

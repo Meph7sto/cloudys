@@ -140,9 +140,23 @@ public class PythonSidecarManager {
     }
 
     private static List<String> buildCommand(PythonBridgeProperties properties) {
+        String executable = properties.getPythonExecutable();
+        if (executable != null && executable.toLowerCase().startsWith("python")) {
+            return List.of(
+                    executable,
+                    "-m",
+                    "uvicorn",
+                    properties.getAppModule(),
+                    "--host",
+                    properties.getHost(),
+                    "--port",
+                    Integer.toString(properties.getPort())
+            );
+        }
         return List.of(
-                properties.getPythonExecutable(),
-                "-m",
+                executable,
+                "run",
+                "--locked",
                 "uvicorn",
                 properties.getAppModule(),
                 "--host",

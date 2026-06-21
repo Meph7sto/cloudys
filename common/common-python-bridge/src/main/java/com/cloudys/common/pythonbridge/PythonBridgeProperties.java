@@ -19,10 +19,10 @@ public class PythonBridgeProperties {
     private boolean manageProcess = false;
 
     /** Python 可执行文件 */
-    private String pythonExecutable = "python";
+    private String pythonExecutable = "uv";
 
     /** Sidecar 工作目录 */
-    private String workingDirectory = "python";
+    private String workingDirectory = "services/python-sidecar";
 
     /** Sidecar 模块入口，例如 sidecar_app:app */
     private String appModule = "sidecar_app:app";

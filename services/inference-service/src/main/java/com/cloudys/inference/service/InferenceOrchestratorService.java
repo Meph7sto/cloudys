@@ -171,11 +171,13 @@ public class InferenceOrchestratorService {
 
     public Mono<Map<String, Object>> warmup() {
         Map<String, Object> request = Map.of(
-                "prompt", "ping",
-                "system_prompt", "Warm up the model and return a short acknowledgement.",
-                "max_new_tokens", 8,
-                "use_thinking_mode", false,
-                "use_async_client", false
+                "messages", java.util.List.of(
+                        Map.of("role", "system", "content", "Warm up the model and return a short acknowledgement."),
+                        Map.of("role", "user", "content", "ping")
+                ),
+                "model", "deepseek-v4-pro",
+                "thinking_enabled", false,
+                "max_tokens", 8
         );
         return bridge.post("/chat/completions", request, MAP_TYPE);
     }
