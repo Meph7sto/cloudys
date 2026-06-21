@@ -24,7 +24,7 @@
 - Java 17+
 - Maven 3.9+
 - Docker & Docker Compose
-- (可选) Python 3.12 + conda (inference-service)
+- (可选) `uv` + Python 3.11（本地托管 inference-service sidecar）
 
 ### 1. 启动开发环境
 
@@ -75,8 +75,8 @@ mvn -pl services/requirement-analysis-service spring-boot:run
 mvn -pl services/inference-service spring-boot:run
 ```
 
-`inference-service` 默认会从 `services/inference-service/python/sidecar_app.py` 启动 Python sidecar。
-该桥接入口复用仓库中的 `Semantic-Atlas/backend_inference` 代码；如果该目录不在默认位置，可通过 `SEMANTIC_ATLAS_BACKEND_INFERENCE` 或 `PYTHON_SIDECAR_WORKDIR` 覆盖。
+`inference-service` 默认会从仓库内 `services/python-sidecar/` 启动 Python sidecar。
+Java 侧默认入口仍是 `sidecar_app:app`，但实现已内收为仓库内项目，并通过 `uv` 管理依赖与启动。
 
 ### 4. 运行测试
 
@@ -118,8 +118,9 @@ cloudys/
 │   ├── project-service/              # 项目管理服务
 │   ├── requirement-service/          # 需求管理服务
 │   ├── requirement-analysis-service/ # 需求分析服务
-│   └── inference-service/            # 推理服务 (Java + Python)
-│       └── python/                   # sidecar 启动桥接入口
+│   ├── inference-service/            # 推理服务 (Java + Python)
+│   │   └── python/                   # sidecar Java 兼容桥接入口
+│   └── python-sidecar/               # Python sidecar 项目 (uv + FastAPI)
 └── frontend/                         # Vue 3 前端 (保持不变)
 ```
 
@@ -179,6 +180,9 @@ cloudys/
 ```bash
 # 单元测试 & 单服务集成测试
 mvn test
+
+# Python sidecar 契约测试
+uv run --project services/python-sidecar --locked pytest tests -q
 
 # Gateway 测试
 mvn test -pl services/gateway-service

@@ -2,7 +2,7 @@
 
 ## 概述
 
-Cloudys 是 Semantic-Atlas 需求工程语义分析平台的 Java Spring Boot 3 + Spring Cloud 微服务版本。
+Cloudys 是需求工程语义分析平台的 Java Spring Boot 3 + Spring Cloud 微服务版本。
 本文档涵盖从源码构建到 Kubernetes 集群部署的完整流程。
 
 ## 环境要求
@@ -99,6 +99,14 @@ docker compose -f docker-compose.yml -f docker-compose.vm.yml -f docker-compose.
 1. **搭建 Kubernetes 集群** (参考 6.1 节)
 2. **安装 kubectl** 并配置 kubeconfig
 3. **配置镜像仓库** (阿里云 ACR 或其他)
+4. **准备 NFS 共享存储**
+
+```bash
+# 示例
+sudo mkdir -p /data/nfs/cloudys/postgresql
+
+# 确保该目录已通过 NFS 导出，并且所有 K8s 节点可挂载访问
+```
 
 ### 构建镜像
 
@@ -118,13 +126,20 @@ cd deploy/scripts
 ```bash
 # 使用部署脚本 (推荐)
 cd deploy/scripts
+export NFS_SERVER=192.168.1.10
+export NFS_PATH=/data/nfs/cloudys/postgresql
 ./deploy-k8s.sh
 
 # 或手动部署
 kubectl apply -f deploy/k8s/00-namespace.yml
 kubectl apply -f deploy/k8s/10-jwt-secret.yml
 kubectl apply -f deploy/k8s/98-deepseek-secret.yml
-kubectl apply -f deploy/k8s/01-postgres-*.yml
+kubectl apply -f deploy/k8s/01-postgres-secret.yml
+kubectl apply -f deploy/k8s/01-postgres-configmap.yml
+export NFS_SERVER=192.168.1.10
+export NFS_PATH=/data/nfs/cloudys/postgresql
+envsubst < deploy/k8s/01-postgres-pv-pvc.yml | kubectl apply -f -
+kubectl apply -f deploy/k8s/01-postgres-statefulset.yml
 kubectl apply -f deploy/k8s/02-eureka-service.yml
 kubectl apply -f deploy/k8s/04-auth-service.yml
 kubectl apply -f deploy/k8s/05-project-service.yml
@@ -139,17 +154,17 @@ kubectl apply -f deploy/k8s/08-ingress.yml
 
 ```bash
 # 检查所有 Pod 运行状态
-kubectl get pods -n semantic-atlas
+kubectl get pods -n cloudys
 
 # 检查 Service
-kubectl get svc -n semantic-atlas
+kubectl get svc -n cloudys
 
 # 检查 Eureka 注册 (port-forward)
-kubectl port-forward -n semantic-atlas svc/eureka-service 8888:8888 &
+kubectl port-forward -n cloudys svc/eureka-service 8888:8888 &
 curl http://localhost:8888/eureka/apps
 
 # 通过 Gateway 访问
-kubectl port-forward -n semantic-atlas svc/gateway-service 8008:8008 &
+kubectl port-forward -n cloudys svc/gateway-service 8008:8008 &
 curl http://localhost:8008/health
 ```
 
@@ -163,6 +178,16 @@ export TAG=v1.0.0
 ```
 
 或通过 Jenkins Pipeline 自动设置 (见 Jenkinsfile)。
+
+### NFS 持久化说明
+
+数据库持久化已按课程验收口径改为 **NFS PV/PVC** 方案，不再使用 `hostPath`。
+
+部署前必须保证:
+
+- NFS 服务端已导出 `NFS_PATH`
+- 所有 Kubernetes 节点已安装 NFS 客户端
+- `NFS_SERVER` 与 `NFS_PATH` 通过 `envsubst` 正确渲染到 PV 文件中
 
 ### Secret 管理
 
@@ -180,30 +205,30 @@ export TAG=v1.0.0
 
 ```bash
 # 将 auth-service 扩展到 3 副本
-kubectl scale deployment auth-service -n semantic-atlas --replicas=3
+kubectl scale deployment auth-service -n cloudys --replicas=3
 
 # 将 project-service 扩展到 3 副本 (验证负载均衡)
-kubectl scale deployment project-service -n semantic-atlas --replicas=3
+kubectl scale deployment project-service -n cloudys --replicas=3
 ```
 
 ### 滚动更新
 
 ```bash
 # 更新镜像后触发滚动更新
-kubectl set image deployment/auth-service auth-service=${REGISTRY}/auth-service:${TAG} -n semantic-atlas
+kubectl set image deployment/auth-service auth-service=${REGISTRY}/auth-service:${TAG} -n cloudys
 
 # 或重启所有业务服务
-kubectl rollout restart deployment -n semantic-atlas --selector=app!=postgresql
+kubectl rollout restart deployment -n cloudys --selector=app!=postgresql
 ```
 
 ### 回滚
 
 ```bash
 # 查看历史版本
-kubectl rollout history deployment/auth-service -n semantic-atlas
+kubectl rollout history deployment/auth-service -n cloudys
 
 # 回滚到上一个版本
-kubectl rollout undo deployment/auth-service -n semantic-atlas
+kubectl rollout undo deployment/auth-service -n cloudys
 ```
 
 ## CI/CD Pipeline (Jenkins)
@@ -220,6 +245,30 @@ Jenkinsfile 包含 7 个阶段:
 使用前需在 Jenkins 中配置:
 - `REGISTRY_USERNAME` / `REGISTRY_PASSWORD` 凭据
 - `kubeconfig` 凭据 (Kubernetes 集群访问)
+- Pipeline 参数 `NFS_SERVER`
+- Pipeline 参数 `NFS_PATH`
+
+## Kubernetes Dashboard
+
+仓库已补充 Dashboard 管理员账号资源文件:
+
+- `deploy/k8s/11-dashboard-admin.yml`
+
+如集群中已安装 Dashboard，可执行:
+
+```bash
+kubectl apply -f deploy/k8s/11-dashboard-admin.yml
+kubectl -n kubernetes-dashboard create token dashboard-admin
+kubectl proxy
+```
+
+然后访问:
+
+```text
+http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+```
+
+如果你的环境尚未安装 Dashboard，请按集群当前允许的安装方式先完成安装，再应用管理员账号文件。
 
 ## 监控
 

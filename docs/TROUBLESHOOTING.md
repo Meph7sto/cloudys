@@ -16,18 +16,19 @@
 ### 症状: Pod 一直处于 Pending 状态
 
 ```bash
-kubectl describe pod <pod-name> -n semantic-atlas
+kubectl describe pod <pod-name> -n cloudys
 ```
 
 **常见原因:**
 - 资源不足: 检查 `kubectl top nodes`
-- PVC 未绑定: 检查 `kubectl get pvc -n semantic-atlas`
+- PVC 未绑定: 检查 `kubectl get pvc -n cloudys`
+- NFS 不可达: 检查节点是否能访问 `NFS_SERVER`，以及导出目录权限是否正确
 - 镜像拉取失败: 检查 `imagePullSecrets` 和镜像仓库网络
 
 ### 症状: Pod 频繁重启 (CrashLoopBackOff)
 
 ```bash
-kubectl logs <pod-name> -n semantic-atlas --previous
+kubectl logs <pod-name> -n cloudys --previous
 ```
 
 **常见原因:**
@@ -39,10 +40,10 @@ kubectl logs <pod-name> -n semantic-atlas --previous
 
 ```bash
 # 检查就绪探针
-kubectl exec -it <pod-name> -n semantic-atlas -- wget -qO- http://localhost:<port>/actuator/health/readiness
+kubectl exec -it <pod-name> -n cloudys -- wget -qO- http://localhost:<port>/actuator/health/readiness
 
 # 检查存活探针
-kubectl exec -it <pod-name> -n semantic-atlas -- wget -qO- http://localhost:<port>/actuator/health/liveness
+kubectl exec -it <pod-name> -n cloudys -- wget -qO- http://localhost:<port>/actuator/health/liveness
 ```
 
 ---
@@ -53,7 +54,7 @@ kubectl exec -it <pod-name> -n semantic-atlas -- wget -qO- http://localhost:<por
 
 1. **检查 Eureka Pod 是否正常运行:**
    ```bash
-   kubectl get pods -n semantic-atlas -l app=eureka-service
+   kubectl get pods -n cloudys -l app=eureka-service
    ```
 
 2. **检查服务配置:**
@@ -62,17 +63,17 @@ kubectl exec -it <pod-name> -n semantic-atlas -- wget -qO- http://localhost:<por
    eureka:
      client:
        service-url:
-         defaultZone: http://eureka-service.semantic-atlas.svc.cluster.local:8888/eureka
+         defaultZone: http://eureka-service.cloudys.svc.cluster.local:8888/eureka
    ```
 
 3. **检查服务日志:**
    ```bash
-   kubectl logs -n semantic-atlas <service-pod> | grep -i eureka
+   kubectl logs -n cloudys <service-pod> | grep -i eureka
    ```
 
 4. **验证 DNS 解析:**
    ```bash
-   kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup eureka-service.semantic-atlas.svc.cluster.local
+   kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup eureka-service.cloudys.svc.cluster.local
    ```
 
 ### 症状: 自我保护模式
@@ -89,7 +90,7 @@ Eureka 控制台显示红色警告 "RENEWALS ARE LESSER THAN THRESHOLD":
 
 ```bash
 # 检查 Gateway 日志
-kubectl logs -n semantic-atlas -l app=gateway-service | tail -50
+kubectl logs -n cloudys -l app=gateway-service | tail -50
 ```
 
 **原因分析:**
@@ -121,30 +122,53 @@ spring.cloud.gateway.globalcors.cors-configurations.[/**].allowedOrigins: "https
 
 1. **检查 PostgreSQL Pod:**
    ```bash
-   kubectl get pods -n semantic-atlas -l app=postgresql
+   kubectl get pods -n cloudys -l app=postgresql
    ```
 
 2. **检查 Secret 是否正确:**
    ```bash
-   kubectl get secret postgres-secret -n semantic-atlas -o yaml
+   kubectl get secret postgres-secret -n cloudys -o yaml
    ```
    `POSTGRES_USER`、`POSTGRES_PASSWORD`、`POSTGRES_DB` 必须与连接字符串一致。
+
+3. **检查 NFS PV/PVC:**
+   ```bash
+   kubectl get pv postgres-pv
+   kubectl get pvc postgres-pvc -n cloudys
+   ```
+   若 PVC 长时间 Pending，重点检查:
+   - `NFS_SERVER` 是否可达
+   - `NFS_PATH` 是否已导出
+   - 节点是否安装了 NFS client
 
 3. **测试数据库连接:**
    ```bash
    kubectl run -it --rm debug --image=postgres:16-alpine --restart=Never -- \
-     psql -h postgresql.semantic-atlas.svc.cluster.local -U cloudys -d cloudys
+     psql -h postgresql.cloudys.svc.cluster.local -U cloudys -d cloudys
    ```
 
 ### 症状: Flyway 迁移失败
 
 ```bash
-kubectl logs -n semantic-atlas <service-pod> | grep -i flyway
+kubectl logs -n cloudys <service-pod> | grep -i flyway
 ```
 
 - 确认 `spring.flyway.enabled: true`
 - 检查迁移文件是否在 `src/main/resources/db/migration/` 目录
 - 手动修复: 连接数据库，检查 `flyway_schema_history` 表
+
+### 症状: Dashboard 无法登录
+
+```bash
+kubectl get pods -n kubernetes-dashboard
+kubectl apply -f deploy/k8s/11-dashboard-admin.yml
+kubectl -n kubernetes-dashboard create token dashboard-admin
+```
+
+若 token 已生成但仍无法访问:
+- 优先使用 `kubectl proxy`
+- 检查浏览器访问路径是否正确
+- 检查 Dashboard 服务是否已存在
 
 ---
 
@@ -218,7 +242,7 @@ nerdctl login registry.cn-hangzhou.aliyuncs.com --username=<your-username>
 
 ### 症状: Python sidecar 构建失败
 
-Python sidecar 构建上下文需要指向 `Semantic-Atlas/backend_inference`:
+Python sidecar 构建使用仓库根作为上下文，并从 `services/python-sidecar/` 读取源码与 `uv.lock`:
 ```bash
-nerdctl build -f deploy/docker/Dockerfile.python-sidecar ../Semantic-Atlas/backend_inference
+nerdctl build -f deploy/docker/Dockerfile.python-sidecar .
 ```

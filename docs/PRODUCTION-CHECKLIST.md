@@ -23,8 +23,9 @@
 - [ ] 所有 Secret 已正确配置
 
 ### Kubernetes 资源
-- [ ] Namespace `semantic-atlas` 已创建
+- [ ] Namespace `cloudys` 已创建
 - [ ] PV/PVC 已配置且存储充足 (建议 ≥10Gi)
+- [ ] NFS 服务端已配置并可从所有节点访问
 - [ ] PostgreSQL StatefulSet 已配置
 - [ ] Eureka 注册中心已部署
 - [ ] 所有微服务 Deployment 已配置
@@ -64,6 +65,7 @@
 - [ ] **就绪探针**: `/actuator/health/readiness` 配置正确
 - [ ] **Eureka 控制台**: 所有服务已注册
 - [ ] **Kubernetes Dashboard**: 已部署并可访问
+- [ ] **Dashboard 管理员账号**: 已应用 `deploy/k8s/11-dashboard-admin.yml`
 
 ---
 
@@ -77,11 +79,11 @@
 
 ```bash
 # 创建备份
-kubectl exec -n semantic-atlas postgresql-0 -- \
+kubectl exec -n cloudys postgresql-0 -- \
   pg_dump -U cloudys cloudys > backup_$(date +%Y%m%d).sql
 
 # 恢复备份
-kubectl exec -i -n semantic-atlas postgresql-0 -- \
+kubectl exec -i -n cloudys postgresql-0 -- \
   psql -U cloudys cloudys < backup_20260612.sql
 ```
 
@@ -91,18 +93,18 @@ kubectl exec -i -n semantic-atlas postgresql-0 -- \
 
 1. **记录当前部署版本:**
    ```bash
-   kubectl get deployments -n semantic-atlas -o wide
+   kubectl get deployments -n cloudys -o wide
    ```
 
 2. **保存当前配置快照:**
    ```bash
-   kubectl get all -n semantic-atlas -o yaml > pre-deploy-snapshot.yaml
+   kubectl get all -n cloudys -o yaml > pre-deploy-snapshot.yaml
    ```
 
 3. **回滚步骤:**
    ```bash
    # 回滚单个服务
-   kubectl rollout undo deployment/auth-service -n semantic-atlas
+   kubectl rollout undo deployment/auth-service -n cloudys
 
    # 或重新 apply 旧版本 YAML
    kubectl apply -f deploy/k8s/ --recursive
@@ -116,6 +118,6 @@ kubectl exec -i -n semantic-atlas postgresql-0 -- \
 - [ ] Gateway 健康检查通过: `curl http://<host>:8008/actuator/health/liveness`
 - [ ] 登录接口正常: `POST /api/v2/auth/login`
 - [ ] 业务接口正常: `GET /api/v2/manage/projects`
-- [ ] Kubernetes Pod 全部 Running: `kubectl get pods -n semantic-atlas`
+- [ ] Kubernetes Pod 全部 Running: `kubectl get pods -n cloudys`
 - [ ] 无异常日志: 检查各服务日志
 - [ ] 前端应用可正常访问和操作
