@@ -7,11 +7,16 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'NFS_SERVER', defaultValue: '', description: 'Kubernetes 集群可访问的 NFS 服务器地址')
+        string(name: 'NFS_PATH', defaultValue: '/data/nfs/cloudys/postgresql', description: 'PostgreSQL 使用的 NFS 导出目录')
+    }
+
     environment {
         // 镜像仓库配置（修改为实际仓库地址）
         REGISTRY        = 'registry.cn-hangzhou.aliyuncs.com/cloudys'
         TAG             = "${env.BUILD_NUMBER}"
-        K8S_NAMESPACE   = 'semantic-atlas'
+        K8S_NAMESPACE   = 'cloudys'
         KUBECONFIG      = credentials('kubeconfig')
     }
 
@@ -63,19 +68,11 @@ pipeline {
                             python-sidecar) dockerfile="Dockerfile.python-sidecar" ;;
                             *) echo "Unknown service: ${svc}" && exit 1 ;;
                         esac
-                        if [ "$svc" = "python-sidecar" ]; then
-                            nerdctl build \\
-                                -t ${REGISTRY}/${svc}:${TAG} \\
-                                -t ${REGISTRY}/${svc}:latest \\
-                                -f deploy/docker/${dockerfile} \\
-                                ../Semantic-Atlas/backend_inference
-                        else
-                            nerdctl build \\
-                                -t ${REGISTRY}/${svc}:${TAG} \\
-                                -t ${REGISTRY}/${svc}:latest \\
-                                -f deploy/docker/${dockerfile} \\
-                                .
-                        fi
+                        nerdctl build \\
+                            -t ${REGISTRY}/${svc}:${TAG} \\
+                            -t ${REGISTRY}/${svc}:latest \\
+                            -f deploy/docker/${dockerfile} \\
+                            .
                     done
                 '''
             }
@@ -100,6 +97,14 @@ pipeline {
             steps {
                 echo '========== Kubernetes 部署/更新 =========='
                 sh '''
+                    if [ -z "${NFS_SERVER}" ] || [ -z "${NFS_PATH}" ]; then
+                      echo "NFS_SERVER / NFS_PATH 未配置"
+                      exit 1
+                    fi
+
+                    export NFS_SERVER="${NFS_SERVER}"
+                    export NFS_PATH="${NFS_PATH}"
+
                     kubectl apply -f deploy/k8s/00-namespace.yml
 
                     # 数据库持久化资源和 Secret
@@ -107,7 +112,7 @@ pipeline {
                     kubectl apply -f deploy/k8s/98-deepseek-secret.yml
                     kubectl apply -f deploy/k8s/01-postgres-secret.yml
                     kubectl apply -f deploy/k8s/01-postgres-configmap.yml
-                    kubectl apply -f deploy/k8s/01-postgres-pv-pvc.yml
+                    envsubst < deploy/k8s/01-postgres-pv-pvc.yml | kubectl apply -f -
                     kubectl apply -f deploy/k8s/01-postgres-statefulset.yml
 
                     # 等待 PostgreSQL 就绪

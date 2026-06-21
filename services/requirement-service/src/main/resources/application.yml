@@ -18,17 +18,21 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    table: requirement_flyway_schema_history
+    baseline-on-migrate: true
+    baseline-version: 0
   cloud:
     openfeign:
       circuitbreaker:
         enabled: true
-    eureka:
-      client:
-        service-url:
-          defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
     loadbalancer:
       ribbon:
         enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
 
 jwt:
   secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}

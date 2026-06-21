@@ -5,17 +5,13 @@ spring:
   application:
     name: gateway-service
   cloud:
-    eureka:
-      client:
-        service-url:
-          defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "${CORS_ORIGINS:*}"
+            allowedOriginPatterns: "${CORS_ORIGINS:*}"
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
@@ -120,6 +116,11 @@ spring:
 jwt:
   secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}
   expiry-hours: ${JWT_EXPIRY_HOURS:24}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
 
 management:
   endpoints:

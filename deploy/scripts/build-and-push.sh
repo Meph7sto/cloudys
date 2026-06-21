@@ -55,21 +55,11 @@ echo ">>> 2. 构建各服务镜像"
 for svc in "${SERVICES[@]}"; do
   dockerfile="${DOCKERFILE_MAP[$svc]}"
   echo "  Building ${svc} (${dockerfile})..."
-
-  if [ "${svc}" = "python-sidecar" ]; then
-    # Python sidecar 构建上下文在 Semantic-Atlas/backend_inference
-    nerdctl build \
-      -t "${REGISTRY}/${svc}:${TAG}" \
-      -t "${REGISTRY}/${svc}:latest" \
-      -f "deploy/docker/${dockerfile}" \
-      ../Semantic-Atlas/backend_inference
-  else
-    nerdctl build \
-      -t "${REGISTRY}/${svc}:${TAG}" \
-      -t "${REGISTRY}/${svc}:latest" \
-      -f "deploy/docker/${dockerfile}" \
-      .
-  fi
+  nerdctl build \
+    -t "${REGISTRY}/${svc}:${TAG}" \
+    -t "${REGISTRY}/${svc}:latest" \
+    -f "deploy/docker/${dockerfile}" \
+    .
 done
 echo ""
 

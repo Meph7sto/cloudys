@@ -1,12 +1,10 @@
 # ================================
 # Gateway Service — 开发环境配置
 # ================================
-spring:
-  cloud:
-    eureka:
-      client:
-        service-url:
-          defaultZone: http://localhost:8888/eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8888/eureka
 
 jwt:
   secret-key: cloudys-jwt-dev-secret-key-change-in-production

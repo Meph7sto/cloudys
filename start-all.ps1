@@ -13,7 +13,6 @@ $frontendDir = Join-Path $rootDir "frontend"
 $frontendPidFile = Join-Path $runDir "frontend.pid"
 $frontendLogFile = Join-Path $runDir "frontend.log"
 $frontendErrFile = Join-Path $runDir "frontend.err.log"
-$semanticAtlasBackendDir = Join-Path $rootDir "..\Semantic-Atlas\backend_inference"
 
 function Get-EnvInt {
     param(
@@ -135,11 +134,6 @@ Invoke-Checked -FailureMessage "Docker is not available. Make sure Docker Deskto
     docker info | Out-Null
 }
 
-Write-Step "Check Python sidecar build directory"
-if (-not (Test-Path $semanticAtlasBackendDir)) {
-    throw "Missing directory '$semanticAtlasBackendDir'. Current docker-compose needs it to build python-sidecar."
-}
-
 if (-not $SkipBackendBuild) {
     Write-Step "Build backend JARs"
     Invoke-Checked -FailureMessage "Maven build failed." -Command {
@@ -177,7 +171,7 @@ if (-not $SkipFrontend) {
 
 Write-Step "Start Docker services"
 Invoke-Checked -FailureMessage "docker compose up failed." -Command {
-    docker compose @composeFiles up -d --build
+    docker compose @composeFiles up -d --build --force-recreate
 }
 
 if (-not $SkipFrontend) {
@@ -227,14 +221,14 @@ if (-not $SkipFrontend) {
 }
 
 Write-Step "Wait for gateway health check"
-$gatewayReady = Wait-HttpReady -Url "http://localhost:$gatewayHostPort/actuator/health" -Label "gateway-service"
+    $gatewayReady = Wait-HttpReady -Url "http://127.0.0.1:$gatewayHostPort/actuator/health/liveness" -Label "gateway-service"
 if (-not $gatewayReady) {
     Write-Warning 'gateway-service did not become healthy in time. Run "docker compose ps" to inspect containers.'
 }
 
 if (-not $SkipFrontend) {
     Write-Step "Wait for frontend dev server"
-    $frontendReady = Wait-HttpReady -Url "http://localhost:$frontendHostPort" -Label "frontend"
+    $frontendReady = Wait-HttpReady -Url "http://127.0.0.1:$frontendHostPort" -Label "frontend"
     if (-not $frontendReady) {
         Write-Warning "Frontend did not become ready in time. Check log: $frontendLogFile"
     }

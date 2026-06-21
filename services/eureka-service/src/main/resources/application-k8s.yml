@@ -3,7 +3,7 @@
 # ================================
 eureka:
   instance:
-    hostname: ${EUREKA_HOST:eureka-service.semantic-atlas.svc.cluster.local}
+    hostname: ${EUREKA_HOST:eureka-service.cloudys.svc.cluster.local}
     prefer-ip-address: false
   server:
     # 生产环境开启自我保护

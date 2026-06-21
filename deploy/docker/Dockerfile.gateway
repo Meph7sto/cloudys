@@ -4,7 +4,7 @@
 FROM eclipse-temurin:17-jre-alpine
 LABEL service="gateway-service"
 WORKDIR /app
-COPY services/gateway-service/target/gateway-service-*.jar app.jar
+COPY services/gateway-service/target/gateway-service-*-exec.jar app.jar
 EXPOSE 8008
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8008/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]

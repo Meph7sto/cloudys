@@ -8,7 +8,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: cloudys-ingress
-  namespace: semantic-atlas
+  namespace: cloudys
   labels:
     app: cloudys
   annotations:

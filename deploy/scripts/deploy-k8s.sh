@@ -11,14 +11,26 @@ set -euo pipefail
 
 REGISTRY="${REGISTRY:-registry.cn-hangzhou.aliyuncs.com/cloudys}"
 TAG="${TAG:-latest}"
-K8S_NAMESPACE="semantic-atlas"
+K8S_NAMESPACE="cloudys"
 K8S_DIR="$(cd "$(dirname "$0")/../k8s" && pwd)"
+NFS_SERVER="${NFS_SERVER:-}"
+NFS_PATH="${NFS_PATH:-}"
 
 echo "=== Kubernetes 部署 ==="
 echo "REGISTRY: ${REGISTRY}"
 echo "TAG: ${TAG}"
 echo "NAMESPACE: ${K8S_NAMESPACE}"
+echo "NFS_SERVER: ${NFS_SERVER:-<unset>}"
+echo "NFS_PATH: ${NFS_PATH:-<unset>}"
 echo ""
+
+if [[ -z "${NFS_SERVER}" || -z "${NFS_PATH}" ]]; then
+  echo "ERROR: NFS_SERVER 和 NFS_PATH 必须在部署前设置。"
+  echo "示例:"
+  echo "  export NFS_SERVER=192.168.1.10"
+  echo "  export NFS_PATH=/data/nfs/cloudys/postgresql"
+  exit 1
+fi
 
 # 1. 创建 Namespace
 echo ">>> 1. 创建 Namespace"
@@ -30,7 +42,7 @@ kubectl apply -f "${K8S_DIR}/10-jwt-secret.yml"
 kubectl apply -f "${K8S_DIR}/98-deepseek-secret.yml"
 kubectl apply -f "${K8S_DIR}/01-postgres-secret.yml"
 kubectl apply -f "${K8S_DIR}/01-postgres-configmap.yml"
-kubectl apply -f "${K8S_DIR}/01-postgres-pv-pvc.yml"
+envsubst < "${K8S_DIR}/01-postgres-pv-pvc.yml" | kubectl apply -f -
 kubectl apply -f "${K8S_DIR}/01-postgres-statefulset.yml"
 
 echo ">>> 等待 PostgreSQL 就绪..."
@@ -79,3 +91,9 @@ echo "通过 Gateway 访问: http://<node-ip>:30008"
 echo "Eureka Dashboard: 通过 kubectl port-forward 访问"
 echo "  kubectl port-forward -n ${K8S_NAMESPACE} svc/eureka-service 8888:8888"
 echo "  然后打开 http://localhost:8888"
+if kubectl get namespace kubernetes-dashboard >/dev/null 2>&1; then
+  echo ""
+  echo "检测到 kubernetes-dashboard 命名空间，可创建管理员账号:"
+  echo "  kubectl apply -f ${K8S_DIR}/11-dashboard-admin.yml"
+  echo "  kubectl -n kubernetes-dashboard create token dashboard-admin"
+fi

@@ -8,10 +8,6 @@ spring:
     openfeign:
       circuitbreaker:
         enabled: true
-    eureka:
-      client:
-        service-url:
-          defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}
 
 jwt:
   secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}
@@ -23,8 +19,8 @@ python:
     enabled: true
     manage-process: ${PYTHON_BRIDGE_MANAGE_PROCESS:false}
     base-url: ${PYTHON_BRIDGE_BASE_URL:http://localhost:8000}
-    python-executable: ${PYTHON_EXECUTABLE:python}
-    working-directory: ${PYTHON_SIDECAR_WORKDIR:python}
+    python-executable: ${PYTHON_EXECUTABLE:uv}
+    working-directory: ${PYTHON_SIDECAR_WORKDIR:services/python-sidecar}
     app-module: ${PYTHON_SIDECAR_APP_MODULE:sidecar_app:app}
     host: ${PYTHON_SIDECAR_HOST:127.0.0.1}
     port: ${PYTHON_SIDECAR_PORT:8000}
@@ -64,3 +60,8 @@ management:
       probes:
         enabled: true
       show-details: always
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8888/eureka}

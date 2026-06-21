@@ -3,18 +3,17 @@
 # ================================
 spring:
   datasource:
-    url: jdbc:postgresql://postgresql.semantic-atlas.svc.cluster.local:5432/cloudys
+    url: jdbc:postgresql://postgresql.cloudys.svc.cluster.local:5432/cloudys
     username: ${POSTGRES_USER:cloudys}
     password: ${POSTGRES_PASSWORD}
   jpa:
     show-sql: false
     hibernate:
       ddl-auto: none
-  cloud:
-    eureka:
-      client:
-        service-url:
-          defaultZone: http://eureka-service.semantic-atlas.svc.cluster.local:8888/eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service.cloudys.svc.cluster.local:8888/eureka
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}

@@ -1,12 +1,10 @@
 # ================================
 # Inference Service — 开发环境配置
 # ================================
-spring:
-  cloud:
-    eureka:
-      client:
-        service-url:
-          defaultZone: http://localhost:8888/eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8888/eureka
 
 jwt:
   secret-key: cloudys-jwt-dev-secret-key-change-in-production
@@ -17,8 +15,8 @@ python:
     enabled: true
     manage-process: ${PYTHON_BRIDGE_MANAGE_PROCESS:true}
     base-url: ${PYTHON_BRIDGE_BASE_URL:http://127.0.0.1:8000}
-    python-executable: ${PYTHON_EXECUTABLE:python}
-    working-directory: ${PYTHON_SIDECAR_WORKDIR:python}
+    python-executable: ${PYTHON_EXECUTABLE:uv}
+    working-directory: ${PYTHON_SIDECAR_WORKDIR:services/python-sidecar}
     app-module: ${PYTHON_SIDECAR_APP_MODULE:sidecar_app:app}
     host: ${PYTHON_SIDECAR_HOST:127.0.0.1}
     port: ${PYTHON_SIDECAR_PORT:8000}

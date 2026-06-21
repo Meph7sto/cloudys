@@ -5,7 +5,7 @@
 FROM eclipse-temurin:17-jre-alpine
 LABEL service="inference-service"
 WORKDIR /app
-COPY services/inference-service/target/inference-service-*.jar app.jar
+COPY services/inference-service/target/inference-service-*-exec.jar app.jar
 EXPOSE 8006
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8006/health || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]

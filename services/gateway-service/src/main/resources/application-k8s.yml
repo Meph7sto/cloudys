@@ -1,12 +1,10 @@
 # ================================
 # Gateway Service — Kubernetes 环境配置
 # ================================
-spring:
-  cloud:
-    eureka:
-      client:
-        service-url:
-          defaultZone: http://eureka-service.semantic-atlas.svc.cluster.local:8888/eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service.cloudys.svc.cluster.local:8888/eureka
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
