@@ -24,14 +24,16 @@ class GatewayCorsConfigurationTest {
     @Test
     @DisplayName("should have CORS configuration in environment")
     void shouldHaveCorsConfigInEnvironment() {
-        assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-origins"))
+        assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-origin-patterns"))
                 .isNotNull();
+        assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-origins"))
+                .isNull();
     }
 
     @Test
-    @DisplayName("should allow all origins and methods")
-    void shouldAllowAllOriginsAndMethods() {
-        assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-origins"))
+    @DisplayName("should allow credentialed CORS with origin patterns")
+    void shouldAllowCredentialedCorsWithOriginPatterns() {
+        assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-origin-patterns"))
                 .isEqualTo("*");
         assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allowed-methods"))
                 .isEqualTo("*");

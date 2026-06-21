@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,6 +49,9 @@ class AuthControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     private String adminToken;
@@ -59,6 +63,8 @@ class AuthControllerIntegrationTest {
     void setUp() {
         productScopeRepository.deleteAll();
         projectScopeRepository.deleteAll();
+        jdbcTemplate.update("delete from manage_projects");
+        jdbcTemplate.update("delete from manage_products");
         userRepository.deleteAll();
 
         // Create admin user
@@ -379,6 +385,44 @@ class AuthControllerIntegrationTest {
         }
     }
 
+    @Nested
+    @DisplayName("POST/PATCH /api/v2/auth/users")
+    class AdminManageUsers {
+
+        @Test
+        @DisplayName("create user should accept frontend snake_case fields and null external_type")
+        void createUserAcceptsSnakeCaseAndNullExternalType() throws Exception {
+            mockMvc.perform(post("/api/v2/auth/users")
+                            .header("Authorization", "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(Map.of(
+                                    "username", "snake-created",
+                                    "password", "password123",
+                                    "display_name", "Snake Created",
+                                    "role", "member"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.username", is("snake-created")))
+                    .andExpect(jsonPath("$.display_name", is("Snake Created")))
+                    .andExpect(jsonPath("$.external_type").isEmpty());
+        }
+
+        @Test
+        @DisplayName("update user should accept frontend snake_case fields")
+        void updateUserAcceptsSnakeCaseFields() throws Exception {
+            mockMvc.perform(patch("/api/v2/auth/users/" + memberUser.getUserId())
+                            .header("Authorization", "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json(Map.of(
+                                    "display_name", "Updated Via Snake",
+                                    "is_active", false,
+                                    "role", "viewer"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.display_name", is("Updated Via Snake")))
+                    .andExpect(jsonPath("$.is_active", is(false)))
+                    .andExpect(jsonPath("$.role", is("viewer")));
+        }
+    }
+
     // ========================
     // User directory (public to authenticated)
     // ========================
@@ -402,6 +446,23 @@ class AuthControllerIntegrationTest {
     class UserScopesCompatibility {
 
         @Test
+        @DisplayName("scope options should expose frontend-compatible names and project product_id")
+        void scopeOptionsExposeFrontendCompatibleFields() throws Exception {
+            jdbcTemplate.update("insert into manage_products (product_id, name, status) values (?, ?, ?)",
+                    "prod-scope", "Scope Product", "active");
+            jdbcTemplate.update("insert into manage_projects (project_id, name, product_id, status) values (?, ?, ?, ?)",
+                    "proj-scope", "Scope Project", null, "active");
+
+            mockMvc.perform(get("/api/v2/auth/scope-options")
+                            .header("Authorization", "Bearer " + adminToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.products[0].product_id", is("prod-scope")))
+                    .andExpect(jsonPath("$.products[0].name", is("Scope Product")))
+                    .andExpect(jsonPath("$.projects[0].project_id", is("proj-scope")))
+                    .andExpect(jsonPath("$.projects[0].name", is("Scope Project")));
+        }
+
+        @Test
         @DisplayName("frontend scopes alias accepts snake_case payload")
         void updateAndReadScopesViaFrontendAlias() throws Exception {
             mockMvc.perform(put("/api/v2/auth/users/" + memberUser.getUserId() + "/scopes")
@@ -409,10 +470,10 @@ class AuthControllerIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json(Map.of(
                                     "product_scopes", java.util.List.of(Map.of(
-                                            "id", "prod-1",
+                                            "product_id", "prod-1",
                                             "can_edit", true)),
                                     "project_scopes", java.util.List.of(Map.of(
-                                            "id", "proj-1",
+                                            "project_id", "proj-1",
                                             "can_edit", false))))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.product_scopes[0].product_id", is("prod-1")))

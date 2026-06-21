@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 final class JsonSupport {
@@ -27,24 +28,63 @@ final class JsonSupport {
     }
 
     static List<String> toStringList(String json) {
-        if (json == null || json.isBlank()) {
+        String normalized = normalizeJson(json);
+        if (normalized == null || normalized.isBlank()) {
             return List.of();
         }
         try {
-            return MAPPER.readValue(json, new TypeReference<ArrayList<String>>() {});
+            JsonNode node = MAPPER.readTree(normalized);
+            if (node.isTextual()) {
+                return toStringList(node.asText());
+            }
+            if (!node.isArray()) {
+                return List.of();
+            }
+            return MAPPER.convertValue(node, new TypeReference<ArrayList<String>>() {});
         } catch (Exception e) {
             return List.of();
         }
     }
 
     static Map<String, Object> toMap(String json) {
-        if (json == null || json.isBlank()) {
+        String normalized = normalizeJson(json);
+        if (normalized == null || normalized.isBlank()) {
             return Collections.emptyMap();
         }
         try {
-            return MAPPER.readValue(json, new TypeReference<Map<String, Object>>() {});
+            JsonNode node = MAPPER.readTree(normalized);
+            if (node.isTextual()) {
+                return toMap(node.asText());
+            }
+            if (!node.isObject()) {
+                return Collections.emptyMap();
+            }
+            return MAPPER.convertValue(node, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
             return Collections.emptyMap();
+        }
+    }
+
+    private static String normalizeJson(String json) {
+        if (json == null) {
+            return null;
+        }
+        String trimmed = json.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}"))
+                || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            return trimmed;
+        }
+        try {
+            JsonNode node = MAPPER.readTree(trimmed);
+            if (node.isTextual()) {
+                return node.asText();
+            }
+            return trimmed;
+        } catch (Exception e) {
+            return trimmed;
         }
     }
 }

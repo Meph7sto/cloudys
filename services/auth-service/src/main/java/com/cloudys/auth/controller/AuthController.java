@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -115,14 +116,7 @@ public class AuthController {
         String currentUserId = SecurityUtils.getCurrentUserId();
         var user = userService.createUser(request.username(), request.password(),
                 request.displayName(), request.role(), request.externalType(), currentUserId);
-        return ResponseEntity.ok(Map.of(
-                "user_id", user.getUserId(),
-                "username", user.getUsername(),
-                "display_name", user.getDisplayName(),
-                "role", user.getRole(),
-                "external_type", user.getExternalType(),
-                "is_active", user.getIsActive()
-        ));
+        return ResponseEntity.ok(toManagedUserMap(user));
     }
 
     @PatchMapping("/users/{userId}")
@@ -131,14 +125,7 @@ public class AuthController {
         String currentUserId = SecurityUtils.getCurrentUserId();
         var user = userService.updateUser(userId, request.displayName(), request.role(),
                 request.isActive(), currentUserId);
-        return ResponseEntity.ok(Map.of(
-                "user_id", user.getUserId(),
-                "username", user.getUsername(),
-                "display_name", user.getDisplayName(),
-                "role", user.getRole(),
-                "external_type", user.getExternalType(),
-                "is_active", user.getIsActive()
-        ));
+        return ResponseEntity.ok(toManagedUserMap(user));
     }
 
     // ========================
@@ -231,6 +218,17 @@ public class AuthController {
             map.put("updated_at", user.getUpdatedAt());
         }
 
+        return map;
+    }
+
+    private Map<String, Object> toManagedUserMap(AuthUser user) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("user_id", user.getUserId());
+        map.put("username", user.getUsername());
+        map.put("display_name", user.getDisplayName());
+        map.put("role", user.getRole());
+        map.put("external_type", user.getExternalType());
+        map.put("is_active", user.getIsActive());
         return map;
     }
 }

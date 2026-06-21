@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -66,6 +69,9 @@ class ProjectManagementIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockBean
     private RequirementServiceClient requirementServiceClient;
@@ -230,6 +236,88 @@ class ProjectManagementIntegrationTest {
     }
 
     @Test
+    @DisplayName("blank project name is rejected by bean validation")
+    void blankProjectNameIsRejected() throws Exception {
+        mockMvc.perform(post("/api/v2/manage/projects")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("name", "   ", "description", "desc"))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail[0].field", is("name")));
+    }
+
+    @Test
+    @DisplayName("list milestones supports legacy JSON rows and dashboard contract")
+    void listMilestonesSupportsLegacyJsonRows() throws Exception {
+        String productId = createProduct("Product Legacy Milestone");
+        String projectId = createProjectUnderProduct(productId, "Project Legacy Milestone");
+        Instant createdAt = Instant.parse("2026-06-13T08:30:00Z");
+
+        jdbcTemplate.update("""
+                        insert into manage_milestones (
+                            milestone_id, project_id, name, description, message, milestone_type,
+                            is_baseline, sprint, version, tags, created_by, created_at, metadata
+                        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?, ?, CAST(? AS JSON))
+                        """,
+                "ms-legacy-1",
+                projectId,
+                "Legacy Baseline",
+                "Imported from legacy service",
+                "legacy message",
+                "baseline",
+                true,
+                "Sprint 9",
+                "v1.2.3",
+                "[\"release\", \"legacy\"]",
+                "u-admin",
+                Timestamp.from(createdAt),
+                "{\"source\":\"python\",\"migrated\":true}");
+
+        mockMvc.perform(get("/api/v2/manage/projects/" + projectId + "/milestones")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.milestones", hasSize(1)))
+                .andExpect(jsonPath("$.milestones[0].milestone_id", is("ms-legacy-1")))
+                .andExpect(jsonPath("$.milestones[0].project_id", is(projectId)))
+                .andExpect(jsonPath("$.milestones[0].name", is("Legacy Baseline")))
+                .andExpect(jsonPath("$.milestones[0].is_baseline", is(true)))
+                .andExpect(jsonPath("$.milestones[0].tags[0]", is("release")))
+                .andExpect(jsonPath("$.milestones[0].created_at", notNullValue()));
+    }
+
+    @Test
+    @DisplayName("list audits supports legacy JSON payloads and dashboard contract")
+    void listAuditsSupportsLegacyJsonRows() throws Exception {
+        String productId = createProduct("Product Legacy Audit");
+        String projectId = createProjectUnderProduct(productId, "Project Legacy Audit");
+        Instant createdAt = Instant.parse("2026-06-13T09:45:00Z");
+
+        jdbcTemplate.update("""
+                        insert into manage_audit_logs (
+                            log_id, project_id, product_id, actor, action, target_type, target_id, detail, created_at
+                        ) values (?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)
+                        """,
+                "audit-legacy-1",
+                projectId,
+                productId,
+                "u-admin",
+                "milestone.create",
+                "milestone",
+                "ms-legacy-1",
+                "{\"description\":\"Legacy audit entry\",\"name\":\"Legacy Baseline\"}",
+                Timestamp.from(createdAt));
+
+        mockMvc.perform(get("/api/v2/manage/projects/" + projectId + "/audits")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .param("limit", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.logs", hasSize(2)))
+                .andExpect(jsonPath("$.audits", hasSize(2)))
+                .andExpect(jsonPath("$.logs[1].description", is("Legacy audit entry")))
+                .andExpect(jsonPath("$.logs[1].created_at", notNullValue()));
+    }
+
+    @Test
     @DisplayName("product aggregate and manage compatibility endpoints satisfy beta contracts")
     void compatibilityEndpointsWork() throws Exception {
         String productId = createProduct("Product Compat");
@@ -276,6 +364,21 @@ class ProjectManagementIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coverage.total", is(1)));
+    }
+
+    @Test
+    @DisplayName("bind project should allow clearing product without internal error")
+    void bindProjectAllowsClearingProduct() throws Exception {
+        String productId = createProduct("Product Bind");
+        String projectId = createProjectUnderProduct(productId, "Project Bind");
+
+        mockMvc.perform(post("/api/v2/product/projects/" + projectId + "/bind")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"product_id\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.project_id", is(projectId)))
+                .andExpect(jsonPath("$.product_id").isEmpty());
     }
 
     private String createProduct(String name) throws Exception {

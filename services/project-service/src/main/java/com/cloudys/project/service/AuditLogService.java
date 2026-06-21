@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +46,7 @@ public class AuditLogService {
     public Map<String, Object> listProjectAudits(String projectId, int limit) {
         int safeLimit = limit > 0 ? Math.min(limit, 200) : 100;
         List<Map<String, Object>> rows = auditLogRepository
-                .findByProjectIdOrderByCreatedAtDesc(projectId, PageRequest.of(0, safeLimit))
+                .findDashboardRowsByProjectId(projectId, safeLimit)
                 .stream()
                 .map(this::toMap)
                 .toList();
@@ -78,5 +77,31 @@ public class AuditLogService {
         map.put("payload", payload);
         map.put("created_at", log.getCreatedAt());
         return map;
+    }
+
+    private Map<String, Object> toMap(Map<String, Object> row) {
+        Map<String, Object> payload = JsonSupport.toMap(stringValue(row.get("detail")));
+        String action = stringValue(row.get("action"));
+        String description = String.valueOf(payload.getOrDefault("description",
+                payload.getOrDefault("detail", payload.getOrDefault("summary", action))));
+
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("log_id", row.get("log_id"));
+        map.put("project_id", row.get("project_id"));
+        map.put("product_id", row.get("product_id"));
+        map.put("actor", row.get("actor"));
+        map.put("action", action);
+        map.put("target_type", row.get("target_type"));
+        map.put("target_id", row.get("target_id"));
+        map.put("detail", description);
+        map.put("description", description);
+        map.put("summary", description);
+        map.put("payload", payload);
+        map.put("created_at", row.get("created_at"));
+        return map;
+    }
+
+    private static String stringValue(Object value) {
+        return value != null ? String.valueOf(value) : null;
     }
 }

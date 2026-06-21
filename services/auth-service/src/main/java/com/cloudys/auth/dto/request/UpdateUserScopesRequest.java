@@ -9,5 +9,10 @@ public record UpdateUserScopesRequest(
         @JsonAlias("project_scopes")
         List<ScopeItem> projectScopes
 ) {
-    public record ScopeItem(String id, @JsonAlias("can_edit") Boolean canEdit) {}
+    public record ScopeItem(
+            @JsonAlias({"product_id", "project_id"})
+            String id,
+            @JsonAlias("can_edit")
+            Boolean canEdit
+    ) {}
 }

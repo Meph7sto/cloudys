@@ -111,8 +111,11 @@ public class ProjectManagementService {
         Project project = getProject(projectId);
         project.setProductId(productId);
         Project saved = projectRepository.save(project);
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("description", "绑定项目到产品");
+        detail.put("product_id", productId);
         auditLogService.record(saved.getProjectId(), saved.getProductId(), "project.bind_product", "project", saved.getProjectId(),
-                Map.of("description", "绑定项目到产品", "product_id", productId));
+                detail);
         return toMap(saved);
     }
 
@@ -145,7 +148,7 @@ public class ProjectManagementService {
     @Transactional(readOnly = true)
     public Map<String, Object> listMilestones(String projectId) {
         getProject(projectId);
-        return Map.of("milestones", milestoneRepository.findByProjectIdOrderByCreatedAtDesc(projectId).stream()
+        return Map.of("milestones", milestoneRepository.findDashboardRowsByProjectId(projectId).stream()
                 .map(this::toMap)
                 .toList());
     }
@@ -232,6 +235,23 @@ public class ProjectManagementService {
         return map;
     }
 
+    private Map<String, Object> toMap(Map<String, Object> row) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("milestone_id", row.get("milestone_id"));
+        map.put("project_id", row.get("project_id"));
+        map.put("name", row.get("name"));
+        map.put("description", row.get("description"));
+        map.put("message", row.get("message"));
+        map.put("milestone_type", row.get("milestone_type"));
+        map.put("is_baseline", row.get("is_baseline"));
+        map.put("sprint", row.get("sprint"));
+        map.put("version", row.get("version"));
+        map.put("tags", JsonSupport.toStringList(stringValue(row.get("tags"))));
+        map.put("created_by", row.get("created_by"));
+        map.put("created_at", row.get("created_at"));
+        return map;
+    }
+
     private Map<String, Object> toMap(Branch branch) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("branch_id", branch.getBranchId());
@@ -255,5 +275,9 @@ public class ProjectManagementService {
         if (!VALID_PROJECT_STATUSES.contains(status)) {
             throw new ErrorResponse("status 必须是 active 或 archived", 400);
         }
+    }
+
+    private static String stringValue(Object value) {
+        return value != null ? String.valueOf(value) : null;
     }
 }

@@ -31,12 +31,25 @@ public class ScopeService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getScopeOptions() {
-        List<Map<String, String>> products = productRepo.findByStatus("active").stream()
-                .map(p -> Map.of("product_id", p.getProductId(), "product_name", p.getProductName()))
+        List<Map<String, Object>> products = productRepo.findByStatus("active").stream()
+                .map(p -> {
+                    Map<String, Object> map = new LinkedHashMap<>();
+                    map.put("product_id", p.getProductId());
+                    map.put("name", p.getProductName());
+                    map.put("product_name", p.getProductName());
+                    return map;
+                })
                 .toList();
 
-        List<Map<String, String>> projects = projectRepo.findByStatus("active").stream()
-                .map(p -> Map.of("project_id", p.getProjectId(), "project_name", p.getProjectName()))
+        List<Map<String, Object>> projects = projectRepo.findByStatus("active").stream()
+                .map(p -> {
+                    Map<String, Object> map = new LinkedHashMap<>();
+                    map.put("project_id", p.getProjectId());
+                    map.put("name", p.getProjectName());
+                    map.put("project_name", p.getProjectName());
+                    map.put("product_id", p.getProductId());
+                    return map;
+                })
                 .toList();
 
         return Map.of("products", products, "projects", projects);
