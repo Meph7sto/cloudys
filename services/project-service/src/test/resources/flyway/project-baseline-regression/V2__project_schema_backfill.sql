@@ -1,0 +1,10 @@
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS description VARCHAR(255);
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS message VARCHAR(255);
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS milestone_type VARCHAR(32) DEFAULT 'regular';
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS is_baseline BOOLEAN DEFAULT FALSE;
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS sprint VARCHAR(255);
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS version VARCHAR(255);
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS tags VARCHAR(4000);
+ALTER TABLE manage_milestones ADD COLUMN IF NOT EXISTS metadata VARCHAR(4000);
+
+ALTER TABLE manage_audit_logs ADD COLUMN IF NOT EXISTS product_id VARCHAR(64);
