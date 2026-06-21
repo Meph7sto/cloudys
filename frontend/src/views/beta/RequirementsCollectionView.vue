@@ -113,7 +113,9 @@ const canStart = computed(() =>
   && !selectedProjectHasSession.value
 )
 
-function openAdvanced() {}
+function openAdvanced() {
+  router.push({ name: 'beta-collection-advanced' })
+}
 </script>
 
 <style scoped>

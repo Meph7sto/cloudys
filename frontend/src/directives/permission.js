@@ -2,8 +2,8 @@
  * 权限控制指令
  *
  * 使用方式：
- * - v-has-permission="{ projectId: 'xxx', permission: 'req:create' }"
- * - v-has-permission="{ projectId: 'xxx', permissions: ['req:create', 'req:edit'], any: true }"
+ * - v-has-permission="{ projectId: 'xxx', permission: 'create_requirement' }"
+ * - v-has-permission="{ projectId: 'xxx', permissions: ['create_requirement', 'edit_requirement'], any: true }"
  * - v-has-role="{ projectId: 'xxx', role: 'PO' }"
  * - v-has-role="{ projectId: 'xxx', roles: ['PO', 'BA'], any: true }"
  */

@@ -76,10 +76,10 @@
 
       <!-- Right Column: Reviews -->
       <div class="work-column">
-        <h3 class="column-title">评审任务（Reviews）<span class="column-count">{{ displayedReviews.length }}</span></h3>
+        <h3 class="column-title">协作关注项（Review Feed）<span class="column-count">{{ displayedReviews.length }}</span></h3>
 
         <div v-if="displayedReviews.length === 0" class="empty-hint">
-          <p>✅ 暂无待评审任务</p>
+          <p>✅ 暂无协作关注项</p>
         </div>
 
         <div v-for="item in displayedReviews" :key="item.req_id" class="task-card">
@@ -99,7 +99,7 @@
             </span>
           </div>
           <div class="task-actions">
-            <button class="btn-primary" @click="$emit('navigate', 'reviews')">进入评审</button>
+            <button class="btn-primary" @click="$emit('navigate', 'requirements')">查看需求</button>
           </div>
         </div>
       </div>

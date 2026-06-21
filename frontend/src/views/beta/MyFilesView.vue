@@ -181,7 +181,7 @@ import { fileApi } from '@/api/system'
 import Sidebar from '@/components/beta/Sidebar.vue'
 import { useBetaNavigation } from '@/composables/useBetaNavigation'
 
-const { activePage, handleNavigate } = useBetaNavigation('account')
+const { activePage, handleNavigate } = useBetaNavigation('my-files')
 
 const isLoading = ref(false)
 const folders = ref([])

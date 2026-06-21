@@ -36,7 +36,7 @@ import { useBetaNavigation, useBetaSidebarProps } from '@/composables/useBetaNav
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const { activePage, handleNavigate, handleExit } = useBetaNavigation('requirements')
+const { activePage, handleNavigate, handleExit } = useBetaNavigation('requirements-manage')
 const { roleType, roleLabel, timestamp, notificationCount } = useBetaSidebarProps()
 </script>
 

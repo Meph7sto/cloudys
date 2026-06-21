@@ -1,4 +1,5 @@
 import { api } from './request'
+import { unwrapApiField, unwrapApiPayload } from './response'
 
 // 通用问答 API
 export const chatApi = {
@@ -39,10 +40,7 @@ export const mobileChatApi = {
         const params = { limit }
         if (userId) params.user_id = userId
         const resp = await api.get('/mobile/sessions', { params })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取会话列表失败')
-        }
-        return resp.data.sessions
+        return unwrapApiField(resp.data, 'sessions', [], '获取会话列表失败')
     },
 
     async listMessages({ userId = null, sessionId, limit = 100, since = null } = {}) {
@@ -50,10 +48,7 @@ export const mobileChatApi = {
         if (userId) params.user_id = userId
         if (since) params.since = since
         const resp = await api.get('/mobile/messages', { params })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取移动端消息失败')
-        }
-        return resp.data.messages
+        return unwrapApiField(resp.data, 'messages', [], '获取移动端消息失败')
     },
 
     async sendMessage({ userId = null, sessionId, sender, content, metadata = null }) {
@@ -65,10 +60,7 @@ export const mobileChatApi = {
         if (userId) payload.user_id = userId
         if (metadata) payload.metadata = metadata
         const resp = await api.post('/mobile/messages', payload)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '发送移动端消息失败')
-        }
-        return resp.data.data
+        return unwrapApiPayload(resp.data, '发送移动端消息失败')
     },
 
     createSSEConnection(sessionId, userId = null) {

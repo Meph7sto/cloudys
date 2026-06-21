@@ -1,4 +1,5 @@
 import { api } from './request'
+import { unwrapAuthPayload } from './auth-response'
 
 // 认证 API
 export const authApi = {
@@ -9,10 +10,7 @@ export const authApi = {
             password,
             role,
         })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '登录失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '登录失败')
     },
 
     // 注册
@@ -23,28 +21,19 @@ export const authApi = {
             display_name: displayName,
             role,
         })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '注册失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '注册失败')
     },
 
     // 验证 Token
     async verify() {
         const resp = await api.get('/auth/verify', { skipAuthRedirect: true })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || 'Token 无效')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, 'Token 无效')
     },
 
     // 获取当前用户信息
     async getCurrentUser() {
         const resp = await api.get('/auth/me')
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取用户信息失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取用户信息失败')
     },
 
     // 登出
@@ -58,10 +47,7 @@ export const authApi = {
         const params = { limit, offset }
         if (role) params.role = role
         const resp = await api.get('/auth/user-directory', { params })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取用户目录失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取用户目录失败')
     },
 
     // 列出用户（仅管理员）
@@ -69,55 +55,37 @@ export const authApi = {
         const params = { limit, offset }
         if (role) params.role = role
         const resp = await api.get('/auth/users', { params })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取用户列表失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取用户列表失败')
     },
 
     // 创建用户（仅管理员）
     async createUser(data) {
         const resp = await api.post('/auth/users', data)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '创建用户失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '创建用户失败')
     },
 
     // 更新用户（仅管理员）
     async updateUser(userId, data) {
         const resp = await api.patch(`/auth/users/${userId}`, data)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '更新用户失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '更新用户失败')
     },
 
     // 获取范围授权可选项（产品/项目）
     async getScopeOptions() {
         const resp = await api.get('/auth/scope-options')
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取范围选项失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取范围选项失败')
     },
 
     // 获取用户范围授权
     async getUserScopes(userId) {
         const resp = await api.get(`/auth/users/${encodeURIComponent(userId)}/scopes`)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取用户范围失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取用户范围失败')
     },
 
     // 更新用户范围授权（全量替换）
     async updateUserScopes(userId, payload) {
         const resp = await api.put(`/auth/users/${encodeURIComponent(userId)}/scopes`, payload)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '更新用户范围失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '更新用户范围失败')
     },
 
     // 列出注册申请（仅管理员）
@@ -177,10 +145,7 @@ export const authApi = {
     // 获取当前用户个人资料
     async getProfile() {
         const resp = await api.get('/auth/profile')
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取个人资料失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '获取个人资料失败')
     },
 
     // 更新当前用户个人资料（display_name, avatar_url）
@@ -189,10 +154,7 @@ export const authApi = {
         if (display_name !== undefined) body.display_name = display_name
         if (avatar_url !== undefined) body.avatar_url = avatar_url
         const resp = await api.patch('/auth/profile', body)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '更新个人资料失败')
-        }
-        return resp.data.data
+        return unwrapAuthPayload(resp.data, '更新个人资料失败')
     },
 
     // 修改当前用户密码

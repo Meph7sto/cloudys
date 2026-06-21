@@ -1,4 +1,5 @@
 import { api } from './request'
+import { unwrapApiPayload } from './response'
 
 // ========================
 // 权限管理 API
@@ -9,10 +10,7 @@ export const permissionApi = {
    */
   async getProjectContext(projectId) {
     const resp = await api.get(`/permission/projects/${encodeURIComponent(projectId)}/context`)
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取权限上下文失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取权限上下文失败')
   },
 
   // ========================
@@ -30,10 +28,7 @@ export const permissionApi = {
       user_id: userId,
       member_roles: memberRoles,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '添加项目成员失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '添加项目成员失败')
   },
 
   /**
@@ -45,10 +40,7 @@ export const permissionApi = {
     const resp = await api.get(`/permission/projects/${encodeURIComponent(projectId)}/members`, {
       params: { include_roles: includeRoles ? 'true' : 'false' },
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取项目成员列表失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取项目成员列表失败')
   },
 
   /**
@@ -58,10 +50,7 @@ export const permissionApi = {
    */
   async removeProjectMember(projectId, userId) {
     const resp = await api.delete(`/permission/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}`)
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '移除项目成员失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '移除项目成员失败')
   },
 
   /**
@@ -74,10 +63,7 @@ export const permissionApi = {
     const resp = await api.put(`/permission/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}/roles`, {
       roles,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '设置用户角色失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '设置用户角色失败')
   },
 
   // ========================
@@ -97,10 +83,7 @@ export const permissionApi = {
       seq,
       comment,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '创建评审指派失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '创建评审指派失败')
   },
 
   /**
@@ -113,10 +96,7 @@ export const permissionApi = {
     if (status) params.status = status
 
     const resp = await api.get(`/permission/requirements/${encodeURIComponent(requirementId)}/reviews`, { params })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取评审列表失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取评审列表失败')
   },
 
   /**
@@ -126,10 +106,7 @@ export const permissionApi = {
    */
   async approveReview(assignmentId, comment = null) {
     const resp = await api.post(`/permission/reviews/${assignmentId}/approve`, { comment })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '通过评审失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '通过评审失败')
   },
 
   /**
@@ -139,10 +116,7 @@ export const permissionApi = {
    */
   async rejectReview(assignmentId, comment = null) {
     const resp = await api.post(`/permission/reviews/${assignmentId}/reject`, { comment })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '驳回评审失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '驳回评审失败')
   },
 
   /**
@@ -151,10 +125,7 @@ export const permissionApi = {
    */
   async withdrawReview(assignmentId) {
     const resp = await api.post(`/permission/reviews/${assignmentId}/withdraw`)
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '撤回评审失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '撤回评审失败')
   },
 
   /**
@@ -166,10 +137,7 @@ export const permissionApi = {
     if (projectId) params.project_id = projectId
 
     const resp = await api.get('/permission/user/pending-reviews', { params })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取待处理评审失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取待处理评审失败')
   },
 
   // ========================
@@ -187,10 +155,7 @@ export const permissionApi = {
       version,
       locked,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '创建基线失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '创建基线失败')
   },
 
   /**
@@ -202,10 +167,7 @@ export const permissionApi = {
     const resp = await api.get(`/permission/projects/${encodeURIComponent(projectId)}/baselines`, {
       params: { include_locked: includeLocked ? 'true' : 'false' },
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取基线列表失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取基线列表失败')
   },
 
   /**
@@ -214,10 +176,7 @@ export const permissionApi = {
    */
   async lockBaseline(baselineId) {
     const resp = await api.post(`/permission/baselines/${baselineId}/lock`)
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '锁定基线失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '锁定基线失败')
   },
 
   /**
@@ -226,10 +185,7 @@ export const permissionApi = {
    */
   async unlockBaseline(baselineId) {
     const resp = await api.post(`/permission/baselines/${baselineId}/unlock`)
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '解锁基线失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '解锁基线失败')
   },
 
   // ========================
@@ -249,10 +205,7 @@ export const permissionApi = {
       reason,
       change_summary: changeSummary,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '创建变更请求失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '创建变更请求失败')
   },
 
   /**
@@ -265,10 +218,7 @@ export const permissionApi = {
     if (status) params.status = status
 
     const resp = await api.get(`/permission/requirements/${encodeURIComponent(requirementId)}/change-requests`, { params })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取变更请求列表失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取变更请求列表失败')
   },
 
   /**
@@ -280,10 +230,7 @@ export const permissionApi = {
     const resp = await api.post(`/permission/change-requests/${requestId}/approve`, {
       review_comment: reviewComment,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '批准变更请求失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '批准变更请求失败')
   },
 
   /**
@@ -295,10 +242,7 @@ export const permissionApi = {
     const resp = await api.post(`/permission/change-requests/${requestId}/reject`, {
       review_comment: reviewComment,
     })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '驳回变更请求失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '驳回变更请求失败')
   },
 
   /**
@@ -310,10 +254,6 @@ export const permissionApi = {
     if (projectId) params.project_id = projectId
 
     const resp = await api.get('/permission/change-requests/pending', { params })
-    if (resp.data?.success === false) {
-      throw new Error(resp.data?.error || '获取待审批变更请求失败')
-    }
-    return resp.data.data
+    return unwrapApiPayload(resp.data, '获取待审批变更请求失败')
   },
 }
-

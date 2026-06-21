@@ -373,7 +373,7 @@ const loadUsers = async () => {
     const params = { limit: 100 }
     if (filterRole.value) params.role = filterRole.value
     const result = await authApi.listUsers(params)
-    let list = result.users || []
+    let list = Array.isArray(result) ? result : result.users || []
     if (filterExternal.value === 'none') list = list.filter((u) => !u.external_type)
     else if (filterExternal.value) list = list.filter((u) => u.external_type === filterExternal.value)
     if (filterKeyword.value) {
@@ -392,7 +392,7 @@ const loadRegistrations = async () => {
   registrationsLoading.value = true
   try {
     const result = await authApi.listRegistrations({ status: registrationStatusFilter.value, limit: 200, offset: 0 })
-    registrations.value = result.registrations || []
+    registrations.value = Array.isArray(result) ? result : result.registrations || []
   } catch (err) {
     alert(err.message || '加载注册申请失败')
   } finally {

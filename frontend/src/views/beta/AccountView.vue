@@ -224,7 +224,7 @@
                   <FolderOpenIcon class="card-header-icon" />
                   <h2 class="card-title">我的文件</h2>
                 </div>
-                <p class="form-hint" style="margin-top: 0; margin-bottom: 14px">浏览您通过移动端上传的所有文件，按文件夹归类展示</p>
+                <p class="form-hint" style="margin-top: 0; margin-bottom: 14px">浏览您的文件，按文件夹归类展示</p>
                 <div class="form-actions">
                   <button class="btn btn-primary" type="button" @click.stop="goToMyFiles">进入我的文件</button>
                 </div>
@@ -247,7 +247,7 @@ import { useBetaNavigation } from '@/composables/useBetaNavigation'
 
 const { activePage, handleNavigate } = useBetaNavigation('account')
 const router = useRouter()
-const goToMyFiles = () => router.push({ name: 'beta-account' })
+const goToMyFiles = () => router.push({ name: 'beta-my-files' })
 
 // ---- 用户资料状态 ----
 const profile = reactive({

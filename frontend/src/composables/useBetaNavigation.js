@@ -25,6 +25,16 @@ const ROUTE_NAME_TO_PAGE_KEY = Object.freeze({
   'beta-requirements-collection': 'requirements-collection',
   'beta-user-manage': 'user-management',
   'beta-account': 'account',
+  'beta-defects': 'defects',
+  'beta-traceability': 'traceability',
+  'beta-multimodal-ingestion': 'multimodal-ingestion',
+  'beta-reports': 'reports',
+  'beta-requirement-graph': 'requirement-graph',
+  'beta-requirements-acquisition': 'requirements-acquisition',
+  'beta-reviews': 'reviews',
+  'beta-collection-advanced': 'requirements-collection',
+  'beta-my-files': 'my-files',
+  'beta-requirements-manage': 'requirements-manage',
 })
 
 const PAGE_KEY_TO_ROUTE_NAME = Object.freeze({
@@ -37,6 +47,15 @@ const PAGE_KEY_TO_ROUTE_NAME = Object.freeze({
   'requirements-collection': 'beta-requirements-collection',
   'user-management': 'beta-user-manage',
   'account': 'beta-account',
+  'defects': 'beta-defects',
+  'traceability': 'beta-traceability',
+  'multimodal-ingestion': 'beta-multimodal-ingestion',
+  'reports': 'beta-reports',
+  'requirement-graph': 'beta-requirement-graph',
+  'requirements-acquisition': 'beta-requirements-acquisition',
+  'reviews': 'beta-reviews',
+  'my-files': 'beta-my-files',
+  'requirements-manage': 'beta-requirements-manage',
 })
 
 // ---- 角色映射 ----

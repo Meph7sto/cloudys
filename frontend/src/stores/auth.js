@@ -10,6 +10,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
 import { AUTH_CLEARED_EVENT, clearAuthStorage } from '@/api/request'
+import { unwrapApiPayload } from '@/api/response'
 
 export const useAuthStore = defineStore('auth', () => {
   // ========================
@@ -166,7 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(result.error || '获取权限上下文失败')
       }
 
-      const context = result.data || {}
+      const context = unwrapApiPayload(result, '获取权限上下文失败') || {}
       projectContexts.value.set(projectId, context)
       return context
     } catch (error) {

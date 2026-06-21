@@ -13,6 +13,14 @@ import RequirementsView from '../views/beta/RequirementsView.vue'
 import RequirementsSessionView from '../views/beta/RequirementsSessionView.vue'
 import AccountView from '../views/beta/AccountView.vue'
 import UserManageView from '../views/beta/UserManageView.vue'
+import DefectsView from '../views/beta/DefectsView.vue'
+import TraceabilityView from '../views/beta/TraceabilityView.vue'
+import ReportView from '../views/beta/ReportView.vue'
+import RequirementGraphView from '../views/beta/RequirementGraphView.vue'
+import RequirementsAcquisitionView from '../views/beta/RequirementsAcquisitionView.vue'
+import CollectionAdvancedView from '../views/beta/CollectionAdvancedView.vue'
+import MyFilesView from '../views/beta/MyFilesView.vue'
+import RequirementsManageWorkbenchView from '../views/beta/RequirementsManageWorkbenchView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -101,6 +109,66 @@ const router = createRouter({
                         requiresAuth: true,
                         requiredSystemIdentities: ['SYS_ADMIN'],
                     },
+                },
+                {
+                    path: 'defects',
+                    name: 'beta-defects',
+                    component: DefectsView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'traceability',
+                    name: 'beta-traceability',
+                    component: TraceabilityView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'multimodal-ingestion',
+                    name: 'beta-multimodal-ingestion',
+                    redirect: { name: 'beta-requirements-collection' },
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'reports',
+                    name: 'beta-reports',
+                    component: ReportView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'requirement-graph',
+                    name: 'beta-requirement-graph',
+                    component: RequirementGraphView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'requirements-acquisition',
+                    name: 'beta-requirements-acquisition',
+                    component: RequirementsAcquisitionView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'reviews',
+                    name: 'beta-reviews',
+                    redirect: { name: 'beta-defects' },
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'collection-advanced',
+                    name: 'beta-collection-advanced',
+                    component: CollectionAdvancedView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'my-files',
+                    name: 'beta-my-files',
+                    component: MyFilesView,
+                    meta: { requiresAuth: true },
+                },
+                {
+                    path: 'requirements-manage',
+                    name: 'beta-requirements-manage',
+                    component: RequirementsManageWorkbenchView,
+                    meta: { requiresAuth: true },
                 },
             ],
         },

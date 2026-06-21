@@ -4,7 +4,7 @@
       <p class="eyebrow">项目仪表盘 · Overview</p>
       <h1>把「现在该做什么」放在第一屏。</h1>
       <p class="lead">
-        项目健康摘要、需求状态分布、评审队列、缺陷跟踪、基线进度 — 所有关键指标的实时聚合。
+        项目健康摘要、需求状态分布、缺陷跟踪、追溯线索、基线进度 — 所有关键指标的实时聚合。
       </p>
       <div class="hero-actions">
         <button
@@ -17,14 +17,14 @@
         <button
           type="button"
           class="ghost sa-button sa-button--secondary"
-          @click="$emit('navigate', 'reviews')"
+          @click="$emit('navigate', 'defects')"
         >
-          查看评审中心
+          查看缺陷面板
         </button>
         <button
           type="button"
           class="ghost sa-button sa-button--secondary"
-          @click="$emit('navigate', 'tracking')"
+          @click="$emit('navigate', 'traceability')"
         >
           打开追踪视图
         </button>

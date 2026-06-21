@@ -169,6 +169,14 @@ import {
   ClipboardList,
   Settings,
   Users,
+  Bug,
+  GitBranch,
+  Image,
+  Search,
+  LayoutGrid,
+  Share2,
+  FileCheck,
+  FolderOpen,
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -246,11 +254,25 @@ const navItemsConfig = computed(() => {
       icon: FolderKanban,
       children: [
         { key: "requirements-collection", label: "需求采集", icon: Sparkles },
+        { key: "requirements-acquisition", label: "需求获取", icon: Search },
         { key: "requirements", label: "需求列表", icon: FileText },
+        { key: "requirements-manage", label: "需求工作台", icon: LayoutGrid },
         { key: "requirements-analysis", label: "需求分析", icon: BarChart3 },
+        { key: "requirement-graph", label: "需求图谱", icon: Share2 },
         { key: "requirements-session", label: "会话需求", icon: FileText },
       ]
     },
+    {
+      key: "tools",
+      label: "需求工具",
+      icon: GitBranch,
+      children: [
+        { key: "traceability", label: "需求追溯", icon: GitBranch },
+        { key: "defects", label: "缺陷管理", icon: Bug },
+        { key: "reports", label: "报告", icon: BarChart3 },
+      ]
+    },
+    { key: "my-files", label: "我的文件", icon: FolderOpen },
     { key: "account", label: "账户设置", icon: Settings },
   ];
 
@@ -264,11 +286,25 @@ const navItemsConfig = computed(() => {
       icon: FolderKanban,
       children: [
         { key: "requirements-collection", label: "需求采集", icon: Sparkles },
+        { key: "requirements-acquisition", label: "需求获取", icon: Search },
         { key: "requirements", label: "需求列表", icon: FileText },
+        { key: "requirements-manage", label: "需求工作台", icon: LayoutGrid },
         { key: "requirements-analysis", label: "需求分析", icon: BarChart3 },
+        { key: "requirement-graph", label: "需求图谱", icon: Share2 },
         { key: "requirements-session", label: "会话需求", icon: FileText },
       ]
     },
+    {
+      key: "tools",
+      label: "需求工具",
+      icon: GitBranch,
+      children: [
+        { key: "traceability", label: "需求追溯", icon: GitBranch },
+        { key: "defects", label: "缺陷管理", icon: Bug },
+        { key: "reports", label: "报告", icon: BarChart3 },
+      ]
+    },
+    { key: "my-files", label: "我的文件", icon: FolderOpen },
     { key: "account", label: "账户设置", icon: Settings },
   ];
 
@@ -378,9 +414,18 @@ const applySidebarWidth = () => {
 // 当 activePage 是子菜单项时，自动展开父菜单（但不会自动收缩已展开的菜单）
 watch(() => props.activePage, (newPage) => {
   // 检查是否是 project-management 的子项，如果是则自动展开（不在子项时不自动收缩）
-  const projectChildren = ['requirements-collection', 'requirements', 'requirements-analysis', 'requirements-session'];
+  const projectChildren = [
+    'requirements-collection', 'requirements-acquisition',
+    'requirements', 'requirements-manage', 'requirements-analysis',
+    'requirement-graph', 'requirements-session',
+  ];
   if (projectChildren.includes(newPage) && !isCollapsed.value) {
     expandedMenus.value['project-management'] = true;
+  }
+  // 检查是否是 需求工具 的子项
+  const toolsChildren = ['traceability', 'defects', 'reports'];
+  if (toolsChildren.includes(newPage) && !isCollapsed.value) {
+    expandedMenus.value['tools'] = true;
   }
 }, { immediate: true });
 
@@ -496,9 +541,17 @@ const getIconColor = (key) => {
     "user-management": "#64748b",
     "project-management": "#c4692f",
     "requirements-collection": "#8b5cf6",
+    "requirements-acquisition": "#6366f1",
     requirements: "#c4692f",
+    "requirements-manage": "#c4692f",
     "requirements-session": "#5d6b76",
     "requirements-analysis": "#c4692f",
+    "requirement-graph": "#7c3aed",
+    tools: "#2f8f89",
+    traceability: "#2f8f89",
+    defects: "#c45b60",
+    reports: "#c4692f",
+    "my-files": "#5d6b76",
     account: "#1b2730",
   };
   return colors[key] || "#9eabb4";

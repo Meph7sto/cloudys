@@ -1,4 +1,5 @@
 import { api } from './request'
+import { unwrapApiField, unwrapApiPayload } from './response'
 
 // 消息推送 API
 export const pushApi = {
@@ -23,10 +24,7 @@ export const pushApi = {
 
     async getMessage(messageId) {
         const resp = await api.get(`/push/messages/${encodeURIComponent(messageId)}`)
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取消息失败')
-        }
-        return resp.data.data
+        return unwrapApiPayload(resp.data, '获取消息失败')
     },
 
     async pushMessage(messageId) {
@@ -58,10 +56,7 @@ export const pushApi = {
         if (messageType) params.message_type = messageType
         if (since) params.since = since
         const resp = await api.get('/push/messages/pending', { params })
-        if (resp.data?.success === false) {
-            throw new Error(resp.data?.error || '获取待处理消息失败')
-        }
-        return resp.data.messages
+        return unwrapApiField(resp.data, 'messages', [], '获取待处理消息失败')
     },
 
     /**

@@ -84,7 +84,7 @@
               {{ isExporting ? '导出中...' : '导出需求' }}
             </button>
             <button
-              v-if="hasPermission('req:create')"
+              v-if="hasPermission('create_requirement')"
               type="button"
               class="action-btn primary sa-button sa-button--primary"
               :disabled="!selectedProjectId"
@@ -1768,7 +1768,21 @@ function canMarkAsCompleted(item) {
 }
 
 function gotoDefectsWithRequirement() {
-  void route
+  const req = requirementDetail.value;
+  if (!req) return;
+  const reqId = (req.req_id || req.id || resolveManageReqId(req) || '').toString();
+  if (!reqId) return;
+  const reqTitle = req.title || req.text || req.statement || '';
+  router.push({
+    name: 'beta-defects',
+    query: {
+      project_id: selectedProjectId.value || '',
+      requirement_id: reqId,
+      focus_requirement_id: reqId,
+      requirement_title: reqTitle,
+      return_route: String(route.name || 'beta-requirements')
+    }
+  });
 }
 
 async function persistStatusToDb(item, targetStatus) {
