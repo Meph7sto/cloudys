@@ -1,0 +1,9 @@
+# ================================
+# Kubernetes Namespace
+# ================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudys
+  labels:
+    name: cloudys

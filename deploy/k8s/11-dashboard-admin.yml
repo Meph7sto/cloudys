@@ -1,0 +1,29 @@
+# ================================
+# Kubernetes Dashboard — 管理员账号
+# ================================
+# 前提:
+# 1. 先按官方方式安装 kubernetes-dashboard
+# 2. 再应用本文件创建 dashboard-admin 账户与绑定
+#
+# 获取 token:
+# kubectl -n kubernetes-dashboard create token dashboard-admin
+# ================================
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dashboard-admin
+  namespace: kubernetes-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dashboard-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-admin
+    namespace: kubernetes-dashboard

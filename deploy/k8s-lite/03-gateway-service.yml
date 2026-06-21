@@ -1,0 +1,77 @@
+# ================================
+# Gateway Service — Deployment + Service (NodePort 外部访问)
+# ================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: cloudys
+  labels:
+    app: gateway-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8008
+      targetPort: 8008
+      nodePort: 30008
+      protocol: TCP
+      name: http
+  selector:
+    app: gateway-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: cloudys
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: master
+      containers:
+        - name: gateway-service
+          image: cloudys/gateway-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8008
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms64m -Xmx256m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8008
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8008
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "384Mi"
+              cpu: "500m"

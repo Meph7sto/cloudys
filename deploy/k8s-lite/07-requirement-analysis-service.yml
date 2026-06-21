@@ -1,0 +1,88 @@
+# ================================
+# Requirement Analysis Service - Deployment + Service
+# ================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: requirement-analysis-service
+  namespace: cloudys
+  labels:
+    app: requirement-analysis-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8004
+      targetPort: 8004
+      protocol: TCP
+      name: http
+  selector:
+    app: requirement-analysis-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: requirement-analysis-service
+  namespace: cloudys
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: requirement-analysis-service
+  template:
+    metadata:
+      labels:
+        app: requirement-analysis-service
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker2
+      containers:
+        - name: requirement-analysis-service
+          image: cloudys/requirement-analysis-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8004
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://10.96.211.219:5432/cloudys
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Xms64m -Xmx256m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8004
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8004
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "750m"

@@ -1,0 +1,32 @@
+# ================================
+# Ingress — Gateway 外部访问入口
+# ================================
+# 使用 nginx-ingress 将外部 HTTP 流量路由到 gateway-service。
+# 部署前确保集群已安装 nginx-ingress controller。
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloudys-ingress
+  namespace: cloudys
+  labels:
+    app: cloudys
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cloudys.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 8008
