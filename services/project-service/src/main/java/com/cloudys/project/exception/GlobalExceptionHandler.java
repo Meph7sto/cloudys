@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.cloudys.common.core.exception.ErrorResponse;
 
@@ -35,6 +36,20 @@ public class GlobalExceptionHandler {
                 .toList();
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(Map.of("detail", (Object) errors));
+    }
+
+    @ExceptionHandler(DownstreamServiceException.class)
+    public ResponseEntity<Map<String, String>> handleDownstream(DownstreamServiceException ex) {
+        return ResponseEntity
+                .status(ex.getStatusCode())
+                .body(Map.of("detail", ex.getDetail()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNoResource(NoResourceFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of("detail", "Not Found"));
     }
 
     @ExceptionHandler(Exception.class)

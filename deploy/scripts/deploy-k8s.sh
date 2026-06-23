@@ -39,7 +39,6 @@ kubectl apply -f "${K8S_DIR}/00-namespace.yml"
 # 2. 部署数据库和持久化资源
 echo ">>> 2. 部署 PostgreSQL 及持久化资源"
 kubectl apply -f "${K8S_DIR}/10-jwt-secret.yml"
-kubectl apply -f "${K8S_DIR}/98-deepseek-secret.yml"
 kubectl apply -f "${K8S_DIR}/01-postgres-secret.yml"
 kubectl apply -f "${K8S_DIR}/01-postgres-configmap.yml"
 envsubst < "${K8S_DIR}/01-postgres-pv-pvc.yml" | kubectl apply -f -
@@ -54,8 +53,12 @@ export REGISTRY TAG
 envsubst < "${K8S_DIR}/02-eureka-service.yml" | kubectl apply -f -
 kubectl wait --for=condition=ready pod -l app=eureka-service -n "${K8S_NAMESPACE}" --timeout=60s
 
-# 4. 部署业务服务
-echo ">>> 4. 部署业务服务"
+# 4. 部署 DeepSeek Secret（推理服务依赖）
+echo ">>> 4. 部署 DeepSeek Secret"
+kubectl apply -f "${K8S_DIR}/98-deepseek-secret.yml"
+
+# 5. 部署业务服务
+echo ">>> 5. 部署业务服务"
 for yaml in \
   "${K8S_DIR}/04-auth-service.yml" \
   "${K8S_DIR}/05-project-service.yml" \
@@ -65,15 +68,15 @@ for yaml in \
   envsubst < "${yaml}" | kubectl apply -f -
 done
 
-# 5. 部署 Gateway（最后部署，依赖其他服务注册到 Eureka）
-echo ">>> 5. 部署 Gateway"
+# 6. 部署 Gateway（最后部署，依赖其他服务注册到 Eureka）
+echo ">>> 6. 部署 Gateway"
 envsubst < "${K8S_DIR}/03-gateway-service.yml" | kubectl apply -f -
 
-# 5b. 部署 Ingress (可选)
-echo ">>> 5b. 部署 Ingress"
+# 7. 部署 Ingress (可选)
+echo ">>> 7. 部署 Ingress"
 kubectl apply -f "${K8S_DIR}/08-ingress.yml" || echo "  Ingress 部署失败（如未安装 Ingress Controller 可忽略）"
 
-# 6. 验证部署结果
+# 8. 验证部署结果
 echo ""
 echo "=== 验证部署结果 ==="
 echo ""

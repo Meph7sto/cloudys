@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.cloudys.common.security.JwtTokenProvider;
 import com.cloudys.project.client.PermissionServiceClient;
 import com.cloudys.project.client.RequirementServiceClient;
+import com.cloudys.project.exception.DownstreamServiceException;
 import com.cloudys.project.repository.BranchRepository;
 import com.cloudys.project.repository.MilestoneRepository;
 import com.cloudys.project.repository.ProductRepository;
@@ -364,6 +365,41 @@ class ProjectManagementIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.coverage.total", is(1)));
+    }
+
+    @Test
+    @DisplayName("manage requirement patch follows frontend contract")
+    void manageRequirementPatchWorks() throws Exception {
+        String productId = createProduct("Product Patch");
+        String projectId = createProjectUnderProduct(productId, "Project Patch");
+
+        mockMvc.perform(patch("/api/v2/manage/requirements/req-created")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of(
+                                "title", "Updated requirement",
+                                "description", "patched from beta view",
+                                "priority", "medium",
+                                "status", "draft",
+                                "tags", List.of("regression", "beta")))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.req_id", is("req-created")))
+                .andExpect(jsonPath("$.project_id", is("proj-x")))
+                .andExpect(jsonPath("$.title", is("Updated requirement")));
+    }
+
+    @Test
+    @DisplayName("manage requirement patch preserves downstream status and detail")
+    void manageRequirementPatchPropagatesDownstreamErrors() throws Exception {
+        org.mockito.Mockito.when(requirementServiceClient.updateRequirement(eq("req-created"), anyMap()))
+                .thenThrow(new DownstreamServiceException(400, "状态流转不允许", null));
+
+        mockMvc.perform(patch("/api/v2/manage/requirements/req-created")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("status", "completed"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail", is("状态流转不允许")));
     }
 
     @Test

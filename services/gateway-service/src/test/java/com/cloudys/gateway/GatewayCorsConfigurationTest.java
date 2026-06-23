@@ -42,4 +42,16 @@ class GatewayCorsConfigurationTest {
         assertThat(environment.getProperty("spring.cloud.gateway.globalcors.cors-configurations.[/**].allow-credentials"))
                 .isEqualTo("true");
     }
+
+    @Test
+    @DisplayName("should expose configurable gateway rate-limit properties")
+    void shouldExposeRateLimitProperties() {
+        assertThat(environment.getProperty("gateway.rate-limit.enabled")).isEqualTo("true");
+        assertThat(environment.getProperty("gateway.rate-limit.default.replenish-rate")).isEqualTo("100");
+        assertThat(environment.getProperty("gateway.rate-limit.default.burst-capacity")).isEqualTo("200");
+        assertThat(environment.getProperty("gateway.rate-limit.routes.auth-service-auth.replenish-rate")).isEqualTo("10");
+        assertThat(environment.getProperty("gateway.rate-limit.routes.auth-service-auth.burst-capacity")).isEqualTo("20");
+        assertThat(environment.getProperty("gateway.rate-limit.routes.inference-service-chat.replenish-rate")).isEqualTo("20");
+        assertThat(environment.getProperty("gateway.rate-limit.routes.inference-service-chat.burst-capacity")).isEqualTo("30");
+    }
 }

@@ -9,6 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cloudys.common.core.exception.ErrorResponse;
 import com.cloudys.project.client.RequirementServiceClient;
+import com.cloudys.project.exception.DownstreamServiceException;
+
+import feign.FeignException;
 
 @Service
 public class ManageCompatibilityService {
@@ -27,12 +30,12 @@ public class ManageCompatibilityService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> listRequirements(String projectId, boolean tree) {
-        return unwrap(requirementServiceClient.listRequirements(projectId, tree, false));
+        return invoke(() -> unwrap(requirementServiceClient.listRequirements(projectId, tree, false)));
     }
 
     @Transactional
     public Map<String, Object> createRequirement(String projectId, Map<String, Object> request) {
-        Map<String, Object> response = unwrap(requirementServiceClient.createRequirement(projectId, request));
+        Map<String, Object> response = invoke(() -> unwrap(requirementServiceClient.createRequirement(projectId, request)));
         auditLogService.record(projectId,
                 String.valueOf(projectManagementService.get(projectId).get("product_id")),
                 "requirement.create",
@@ -44,7 +47,7 @@ public class ManageCompatibilityService {
 
     @Transactional
     public Map<String, Object> updateRequirement(String reqId, Map<String, Object> request) {
-        Map<String, Object> response = unwrap(requirementServiceClient.updateRequirement(reqId, request));
+        Map<String, Object> response = invoke(() -> unwrap(requirementServiceClient.updateRequirement(reqId, request)));
         auditLogService.record(String.valueOf(response.get("project_id")),
                 null,
                 "requirement.update",
@@ -56,22 +59,22 @@ public class ManageCompatibilityService {
 
     @Transactional
     public Map<String, Object> bulkUpdateRequirementStatus(Map<String, Object> request) {
-        return unwrap(requirementServiceClient.bulkUpdateStatus(request));
+        return invoke(() -> unwrap(requirementServiceClient.bulkUpdateStatus(request)));
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> listDefects(String projectId) {
-        return unwrap(requirementServiceClient.listProjectDefects(projectId));
+        return invoke(() -> unwrap(requirementServiceClient.listProjectDefects(projectId)));
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> listRequirementDefects(String reqId) {
-        return unwrap(requirementServiceClient.listRequirementDefects(reqId));
+        return invoke(() -> unwrap(requirementServiceClient.listRequirementDefects(reqId)));
     }
 
     @Transactional
     public Map<String, Object> createDefect(String projectId, Map<String, Object> request) {
-        Map<String, Object> response = unwrap(requirementServiceClient.createDefect(projectId, request));
+        Map<String, Object> response = invoke(() -> unwrap(requirementServiceClient.createDefect(projectId, request)));
         auditLogService.record(projectId,
                 String.valueOf(projectManagementService.get(projectId).get("product_id")),
                 "defect.create",
@@ -83,7 +86,7 @@ public class ManageCompatibilityService {
 
     @Transactional
     public Map<String, Object> updateDefect(String defectId, Map<String, Object> request) {
-        Map<String, Object> response = unwrap(requirementServiceClient.updateDefect(defectId, request));
+        Map<String, Object> response = invoke(() -> unwrap(requirementServiceClient.updateDefect(defectId, request)));
         auditLogService.record(String.valueOf(response.get("project_id")),
                 null,
                 "defect.update",
@@ -95,22 +98,22 @@ public class ManageCompatibilityService {
 
     @Transactional
     public Map<String, Object> deleteDefect(String defectId) {
-        return unwrap(requirementServiceClient.deleteDefect(defectId));
+        return invoke(() -> unwrap(requirementServiceClient.deleteDefect(defectId)));
     }
 
     @Transactional
     public Map<String, Object> moveRequirement(String reqId, Map<String, Object> request) {
-        return unwrap(requirementServiceClient.moveRequirement(reqId, request));
+        return invoke(() -> unwrap(requirementServiceClient.moveRequirement(reqId, request)));
     }
 
     @Transactional
     public Map<String, Object> deleteRequirement(String reqId, boolean cascade) {
-        return unwrap(requirementServiceClient.deleteRequirement(reqId, cascade));
+        return invoke(() -> unwrap(requirementServiceClient.deleteRequirement(reqId, cascade)));
     }
 
     @Transactional
     public Map<String, Object> importRequirements(String projectId, Map<String, Object> request) {
-        Map<String, Object> response = unwrap(requirementServiceClient.importRequirements(projectId, request));
+        Map<String, Object> response = invoke(() -> unwrap(requirementServiceClient.importRequirements(projectId, request)));
         auditLogService.record(projectId,
                 String.valueOf(projectManagementService.get(projectId).get("product_id")),
                 "requirement.import",
@@ -163,6 +166,35 @@ public class ManageCompatibilityService {
             throw new ErrorResponse(String.valueOf(response.getOrDefault("detail", "下游服务调用失败")), 503);
         }
         return response;
+    }
+
+    private Map<String, Object> invoke(FeignCall call) {
+        try {
+            return call.execute();
+        } catch (FeignException ex) {
+            throw translateFeignException(ex);
+        }
+    }
+
+    private DownstreamServiceException translateFeignException(FeignException ex) {
+        String detail = ex.contentUTF8();
+        if (detail != null && !detail.isBlank()) {
+            Map<String, Object> body = JsonSupport.toMap(detail);
+            Object bodyDetail = body.get("detail");
+            if (bodyDetail instanceof String bodyDetailText && !bodyDetailText.isBlank()) {
+                detail = bodyDetailText;
+            } else {
+                detail = detail.trim();
+            }
+        } else {
+            detail = "下游服务调用失败";
+        }
+        return new DownstreamServiceException(ex.status(), detail, ex);
+    }
+
+    @FunctionalInterface
+    private interface FeignCall {
+        Map<String, Object> execute();
     }
 
     @SuppressWarnings("unchecked")

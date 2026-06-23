@@ -4,7 +4,7 @@
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-service.cloudys.svc.cluster.local:8888/eureka
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-service:8888/eureka}
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}

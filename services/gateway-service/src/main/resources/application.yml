@@ -8,6 +8,9 @@ spring:
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@userKeyResolver}"
       globalcors:
         cors-configurations:
           '[/**]':
@@ -116,6 +119,55 @@ spring:
 jwt:
   secret-key: ${JWT_SECRET_KEY:cloudys-jwt-secret-change-in-production}
   expiry-hours: ${JWT_EXPIRY_HOURS:24}
+
+gateway:
+  rate-limit:
+    enabled: ${GATEWAY_RATE_LIMIT_ENABLED:true}
+    default:
+      replenish-rate: ${GATEWAY_RATE_LIMIT_DEFAULT_REPLENISH_RATE:100}
+      burst-capacity: ${GATEWAY_RATE_LIMIT_DEFAULT_BURST_CAPACITY:200}
+      requested-tokens: ${GATEWAY_RATE_LIMIT_DEFAULT_REQUESTED_TOKENS:1}
+    routes:
+      auth-service-auth:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_AUTH_REPLENISH_RATE:10}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_AUTH_BURST_CAPACITY:20}
+        requested-tokens: 1
+      auth-service-permission:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_AUTH_REPLENISH_RATE:10}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_AUTH_BURST_CAPACITY:20}
+        requested-tokens: 1
+      inference-service-chat:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-classification:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-conflict:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-traceability:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-kb:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-l4:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-acquisition:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
+      inference-service-compat:
+        replenish-rate: ${GATEWAY_RATE_LIMIT_INFERENCE_REPLENISH_RATE:20}
+        burst-capacity: ${GATEWAY_RATE_LIMIT_INFERENCE_BURST_CAPACITY:30}
+        requested-tokens: 1
 
 eureka:
   client:

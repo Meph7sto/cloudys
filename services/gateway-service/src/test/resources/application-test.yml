@@ -95,8 +95,17 @@ spring:
           predicates:
             - Path=/api/v2/**
           order: 100
+        # Rate-limit test route — uses default-filters RequestRateLimiter.
+        # Path must be under /api/ so JwtGatewayFilter injects X-User-Id.
+        - id: ratelimit-test
+          uri: http://localhost:19999
+          predicates:
+            - Path=/api/v2/ratelimit-test/**
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@userKeyResolver}"
       globalcors:
         cors-configurations:
           '[/**]':
@@ -108,3 +117,51 @@ spring:
 jwt:
   secret-key: test-gateway-jwt-secret-minimum-32-chars
   expiry-hours: 1
+
+gateway:
+  rate-limit:
+    enabled: true
+    default:
+      replenish-rate: 100
+      burst-capacity: 200
+      requested-tokens: 1
+    routes:
+      test-auth:
+        replenish-rate: 10
+        burst-capacity: 20
+      auth-service-auth:
+        replenish-rate: 10
+        burst-capacity: 20
+      test-permission:
+        replenish-rate: 10
+        burst-capacity: 20
+      auth-service-permission:
+        replenish-rate: 10
+        burst-capacity: 20
+      test-inference-chat:
+        replenish-rate: 20
+        burst-capacity: 30
+      inference-service-chat:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-classification:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-conflict:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-traceability:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-kb:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-l4:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-acquisition:
+        replenish-rate: 20
+        burst-capacity: 30
+      test-inference-compat:
+        replenish-rate: 20
+        burst-capacity: 30
